@@ -2,8 +2,10 @@
   description = "macOS settings for Kazukis-MacBook-Air";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
-    nix-darwin.url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
+    # リリース番号を固定せず、更新時にunstableブランチの最新を取得する。
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    # nix-darwinも最新の開発ブランチに追従する。
+    nix-darwin.url = "github:nix-darwin/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
   };
 
