@@ -47,8 +47,6 @@
         "profile.default_content_setting_values.ar" = 2;
         # バックグラウンド同期の既定権限。0は既定、1は許可、2はブロック、3は確認（対応する種類のみ）。
         "profile.default_content_setting_values.background_sync" = 2;
-        # キャプチャ対象の画面の操作の既定権限。0は既定、1は許可、2はブロック、3は確認（対応する種類のみ）。
-        "profile.default_content_setting_values.captured_surface_control" = 2;
         # ファイルへの書き込みの既定権限。0は既定、1は許可、2はブロック、3は確認（対応する種類のみ）。
         "profile.default_content_setting_values.file_system_write_guard" = 2;
         # HIDデバイスへのアクセスの既定権限。0は既定、1は許可、2はブロック、3は確認（対応する種類のみ）。
