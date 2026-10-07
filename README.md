@@ -35,6 +35,8 @@ python3 /Users/yanmakazuki/Documents/Codex/2026-10-07/ko/outputs/mac-settings/ni
 ```
 
 このスクリプトはMacの設定を読み取り、`captured-defaults.nix` と `capture-report.json` を上書きします。
+設定の日本語コメントは、同じフォルダーの `nix_comments.py` から生成します。
+Chromeの取り込みスクリプトもこのファイルを使うため、一緒にGitで管理してください。
 `configuration.nix` は編集しません。生成ファイルを手動編集した場合は再取り込み前に保存してください。
 再取り込み後は差分を確認してからビルド・適用します。
 
