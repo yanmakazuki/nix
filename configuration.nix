@@ -14,5 +14,6 @@
 
   # 読み取った現在値。手動の上書きには lib.mkForce を使う。
   # Chromeは専用モジュールから保存データを読み込み、終了状態で復元する。
-  imports = [ ./captured-defaults.nix ./chrome.nix ];
+  # apps.nixでGUIアプリとコマンドも導入する。
+  imports = [ ./captured-defaults.nix ./chrome.nix ./apps.nix ];
 }

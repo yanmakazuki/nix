@@ -29,7 +29,7 @@
       "persistent-apps" = [
         {
           # Dockに固定するアプリの絶対パス。
-          "app" = "/Applications/Google Chrome.app";
+          "app" = "/Applications/Nix Apps/Google Chrome.app";
         }
         {
           # Dockに固定するアプリの絶対パス。
@@ -37,7 +37,7 @@
         }
         {
           # Dockに固定するアプリの絶対パス。
-          "app" = "/Applications/ChatGPT.app";
+          "app" = "/Applications/Nix Apps/ChatGPT.app";
         }
         {
           # Dockに固定するアプリの絶対パス。

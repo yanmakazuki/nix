@@ -5,8 +5,8 @@
 
 対象はmacOS 26系です。元のMacではmacOS 26.7.1から設定を取り込みました。
 **現時点ではMac全体の完全な復元ではありません。** macOSの管理対象設定はNixで適用し、
-Chromeの保存設定もNix適用時に復元します。アプリのインストール、保護対象のChrome設定、
-アカウントへのログインなどは手動で補います。
+Chromeの保存設定もNix適用時に復元します。Chrome・ChatGPT・VS CodeのGUIとCodex CLIも導入します。
+保護対象のChrome設定、拡張機能、アカウントへのログインなどは手動で補います。
 
 ## 復元できる範囲
 
@@ -15,9 +15,10 @@ Chromeの保存設定もNix適用時に復元します。アプリのインス�
 | Dock・Finder・キーリピート・トラックパッド | nix-darwinで適用 |
 | macOSの外観・言語・地域・時計・一部のメニューバー設定 | nix-darwinで適用。再ログインが必要な場合あり |
 | ウィンドウ配置の動作・Stage Manager関連設定 | nix-darwinで適用 |
-| Dockに固定するアプリの順序 | nix-darwinで適用。アプリ本体は事前にインストール |
+| Dockに固定するアプリの順序 | nix-darwinで適用。Chrome・ChatGPT本体も同じ適用処理で導入 |
 | Chromeの表示・入力・サイト権限の保存設定 | Chromeを終了し、Nix適用時に復元。保護対象は除外 |
-| アプリ、拡張機能、Apple Account・Google等のログイン | 手動で導入・設定 |
+| Chrome・ChatGPT・VS CodeのGUI、Codex CLI、VS Codeのコマンド | Nixpkgsから直接導入・更新 |
+| その他のアプリ、拡張機能、Apple Account・Google等のログイン | 手動で導入・設定 |
 | 文書・写真・パスワード・Cookie・閲覧履歴・ブックマーク | このリポジトリの対象外。別のバックアップや同期から復元 |
 | 壁紙・ディスプレイ・電源・ネットワーク・入力ソース・プライバシー権限 | 必要に応じて手動設定 |
 
@@ -28,8 +29,9 @@ Chromeの保存設定もNix適用時に復元します。アプリのインス�
 
 | ファイル | 役割 |
 | --- | --- |
-| `flake.nix` | 最新を取得するNixpkgs・nix-darwinのブランチ、およびMacの構成名 |
+| `flake.nix` | 最新を取得するNixpkgs・nix-darwinの参照先、およびMacの構成名 |
 | `configuration.nix` | CPU種別、対象ユーザー、Nixの機能設定、読み込むモジュール |
+| `apps.nix` | NixpkgsからのGUIアプリ・CUIコマンドの導入・更新 |
 | `captured-defaults.nix` | 実際に適用するmacOS設定。各項目の意味は日本語コメントを参照 |
 | `captured-chrome.nix` | Chromeの復元元データ。通常の`preferences`を適用 |
 | `chrome.nix` | Chrome復元コマンドを導入し、Nix適用時に実行するモジュール |
@@ -38,7 +40,7 @@ Chromeの保存設定もNix適用時に復元します。アプリのインス�
 | `flake.lock` | 今回取得した依存の版をローカルで保持。Git管理には含めない |
 | `.gitignore` | 確認用JSON、ビルド結果などをGit管理から除外 |
 
-適用時は `flake.nix` → `configuration.nix` から、macOS用の`captured-defaults.nix`とChrome用の`chrome.nix`を読み込みます。
+適用時は `flake.nix` → `configuration.nix` から、macOS用の`captured-defaults.nix`、Chrome用の`chrome.nix`、アプリ用の`apps.nix`を読み込みます。
 `chrome.nix`が`captured-chrome.nix`をJSONへ変換し、復元スクリプトに渡します。
 JSONはNixストア内で生成するため、リポジトリにJSONファイルを追加する必要はありません。
 確認用の`capture-report.json`と`chrome-capture-report.json`は復元に不要です。
@@ -160,23 +162,43 @@ system.primaryUser = "yanmakazuki";
 Macの実際のホスト名が違っていても、下記のコマンドでこの名前を明示していれば構成を選択できます。
 この構成はMacのコンピュータ名を変更しません。
 
-### Dockのアプリの準備
+### アプリの導入設定
 
 `captured-defaults.nix`の`persistent-apps`は、次のパスを参照します。
 
-- `/Applications/Google Chrome.app`
+- `/Applications/Nix Apps/Google Chrome.app`
 - `/System/Applications/Utilities/Terminal.app`
-- `/Applications/ChatGPT.app`
+- `/Applications/Nix Apps/ChatGPT.app`
 - `/System/Applications/Apps.app`
 
-Google ChromeとChatGPTは、各アプリの公式配布元からインストールします。
-TerminalとAppsはmacOS側のアプリです。OSの版によってパスが異なる場合は、Nix設定側を実際のパスに合わせます。
-このリポジトリにはHomebrewやアプリ本体を導入する設定はありません。
+`apps.nix`により、初回の`darwin-rebuild switch`で次のアプリをNixpkgsから導入します。
+事前にChromeやChatGPTを手動インストールする必要はありません。
 
-次のコマンドでパスを確認できます。
+| 用途 | 導入するもの |
+| --- | --- |
+| Chrome GUI | `/Applications/Nix Apps/Google Chrome.app` |
+| ChatGPT GUI | `/Applications/Nix Apps/ChatGPT.app` |
+| OpenAI CUI | Codex CLIの`codex`コマンド |
+| VS Code GUI・CUI | `/Applications/Nix Apps/Visual Studio Code.app`と`code`コマンド |
+
+ChatGPTのCUIとしてCodex CLIを採用しています。端末で使うコーディングエージェントで、
+ChatGPT GUIの全機能を端末に再現するものではありません。ChromeのCUIは追加しません。
+
+Chrome・ChatGPT・VS Codeの非自由ライセンスは、`apps.nix`で対象の3パッケージに限って許可します。
+GUIアプリはnix-darwinが`/Applications/Nix Apps`へ配置します。
+Chromeはアプリだけを公開し、`google-chrome`等のCUIコマンドは追加しません。
+
+アプリも`nix flake update`→ビルド→適用で更新し、取得したNixpkgsに収録されている版を使用します。
+配布元の新リリースがNixpkgsへ反映されるまで時間がかかる場合があります。
+ビルド時にパッケージを取得・構築し、適用時にアプリとコマンドを配置します。
+この構成はHomebrewを導入・使用しません。すでにMacにあるHomebrewや手動導入済みアプリは削除しません。
+同名の手動導入済みアプリがある場合は、Dockの参照先と同じ`/Applications/Nix Apps`側を起動してください。
+
+TerminalとAppsはmacOS側のアプリです。OSの版によってパスが異なる場合は、Nix設定側を実際のパスに合わせます。
+適用後に次のコマンドでパスを確認できます。
 
 ```sh
-ls -d "/Applications/Google Chrome.app" "/Applications/ChatGPT.app"
+ls -d "/Applications/Nix Apps/Google Chrome.app" "/Applications/Nix Apps/ChatGPT.app"
 ls -d /System/Applications/Utilities/Terminal.app /System/Applications/Apps.app
 ```
 
@@ -209,7 +231,7 @@ nix --extra-experimental-features 'nix-command flakes' build \
 成功すると、このフォルダーに`result`というリンクが作られます。
 失敗した場合は、エラーを解決してビルドが成功するまで、次の適用手順へ進みません。
 
-## 6. macOS設定を適用する
+## 6. macOS設定とアプリを適用する
 
 **Chromeをメニューの「終了」またはCommand+Qで完全に終了してください。**
 ウィンドウを閉じただけではプロセスが残る場合があります。復元が終わるまでChromeを起動しません。
@@ -224,6 +246,7 @@ sudo ./result/sw/bin/darwin-rebuild switch \
 ```
 
 管理者パスワードを入力します。入力中の文字はターミナルに表示されません。
+この処理でアプリも導入・更新するため、インターネット接続が必要です。
 nix-darwinは設定値に加えて、Nixデーモンやシステムのシェル初期化などの基盤も管理します。
 
 適用後は一度ログアウトしてログインし直し、ターミナルも開き直します。
@@ -231,7 +254,7 @@ nix-darwinは設定値に加えて、Nixデーモンやシステムのシェル�
 
 ## 7. Chromeの復元結果を確認する
 
-「6. macOS設定を適用する」の最後に、`system.primaryUser`のユーザーとしてChrome復元処理を実行します。
+「6. macOS設定とアプリを適用する」の最後に、`system.primaryUser`のユーザーとしてChrome復元処理を実行します。
 保存先はそのユーザーの`~/Library/Application Support/Google/Chrome/<プロファイル名>/Preferences`です。
 現在の保存データはDefaultプロファイルの28項目で、このうち27項目を復元します。
 設定を追加・削除した場合は、コマンドが表示する項目数を確認してください。
@@ -270,6 +293,18 @@ restore-chrome-settings
 このリポジトリにはCookie、パスワード、閲覧履歴、ブックマーク、拡張機能本体は保存していません。
 
 ## 8. 復元を確認する
+
+アプリとコマンドを確認します。
+
+```sh
+ls -d "/Applications/Nix Apps/Google Chrome.app" "/Applications/Nix Apps/ChatGPT.app" "/Applications/Nix Apps/Visual Studio Code.app"
+codex --version
+code --version
+```
+
+ChatGPTはアプリを起動してログインします。Codex CLIは対象ユーザーのターミナルで`codex`を実行し、
+案内に従ってChatGPTアカウントでログインしてください。認証情報はこのリポジトリに保存しません。
+VS Codeでフォルダーを開くには`code .`を使います。
 
 ターミナルで、主要な管理対象の値を確認します。
 
@@ -328,7 +363,7 @@ Nixから項目を削除してもmacOSの既定値に戻るとは限りません
 
 ### `darwin-rebuild`が見つからない
 
-初回は「6. macOS設定を適用する」の`./result/sw/bin/darwin-rebuild`を使用します。
+初回は「6. macOS設定とアプリを適用する」の`./result/sw/bin/darwin-rebuild`を使用します。
 初回適用後にターミナルを開き直しても見つからない場合は、次を確認します。
 
 ```sh
@@ -346,6 +381,11 @@ ls -l /run/current-system/sw/bin/darwin-rebuild
 
 エラーが指すファイルを読み、バックアップと差分を確認してから個別に解決します。
 関係ないシステムファイルを一括削除して進めないでください。
+
+### Nix Apps内のアプリの更新で権限エラーになる
+
+適用に使うターミナルに、システム設定の「プライバシーとセキュリティ」→「アプリ管理」で権限を付与し、
+再度適用します。nix-darwinのエラーに表示される案内も確認してください。
 
 ### 設定が反映されない
 
@@ -381,3 +421,8 @@ python3 -B -m unittest discover -s tests -v
 - [Lixのインストール](https://lix.systems/install/)
 - [darwin-rebuildの実装](https://github.com/nix-darwin/nix-darwin/blob/master/pkgs/nix-tools/darwin-rebuild.sh)
 - [Chromeの通常設定とポリシーの違い](https://www.chromium.org/administrators/configuring-other-preferences/)
+
+- [Codex CLI](https://learn.chatgpt.com/docs/codex/cli)
+- [nix-darwinのGUIアプリ配置処理](https://github.com/nix-darwin/nix-darwin/blob/master/modules/system/applications.nix)
+- [NixpkgsのChrome（macOS対応）](https://github.com/NixOS/nixpkgs/blob/nixpkgs-unstable/pkgs/by-name/go/google-chrome/package.nix)
+- [NixpkgsのChatGPT](https://github.com/NixOS/nixpkgs/blob/nixpkgs-unstable/pkgs/by-name/ch/chatgpt/package.nix)
