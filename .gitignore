@@ -1,0 +1,5 @@
+capture-report.json
+result
+result-*
+__pycache__/
+.DS_Store

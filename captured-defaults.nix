@@ -1,0 +1,79 @@
+# defaultsから読み取った保存値。取り込みスクリプトで生成。
+{ ... }:
+{
+  system.defaults = {
+    dock = {
+      "autohide" = true;
+      "expose-group-apps" = true;
+      "magnification" = true;
+      "minimize-to-application" = true;
+      "show-process-indicators" = true;
+      "show-recents" = false;
+      "showDesktopGestureEnabled" = false;
+      "tilesize" = 45;
+      "largesize" = 102;
+      "wvous-br-corner" = 1;
+      "persistent-apps" = [ { "app" = "/Applications/Google Chrome.app"; } { "app" = "/System/Applications/Utilities/Terminal.app"; } { "app" = "/Applications/ChatGPT.app"; } { "app" = "/System/Applications/Apps.app"; } ];
+      "persistent-others" = [  ];
+    };
+    finder = {
+      "ShowExternalHardDrivesOnDesktop" = true;
+      "ShowHardDrivesOnDesktop" = false;
+      "ShowRemovableMediaOnDesktop" = false;
+      "FXPreferredViewStyle" = "Nlsv";
+      "NewWindowTarget" = "Home";
+    };
+    NSGlobalDomain = {
+      "AppleEnableSwipeNavigateWithScrolls" = true;
+      "NSAutomaticCapitalizationEnabled" = true;
+      "NSAutomaticPeriodSubstitutionEnabled" = false;
+      "_HIHideMenuBar" = false;
+      "com.apple.springing.enabled" = true;
+      "com.apple.trackpad.forceClick" = true;
+      "KeyRepeat" = 2;
+      "InitialKeyRepeat" = 15;
+      "com.apple.springing.delay" = 0.5;
+      "com.apple.trackpad.scaling" = 2.0;
+      "AppleInterfaceStyle" = "Dark";
+      "AppleIconAppearanceTheme" = "RegularDark";
+      "AppleWindowTabbingMode" = "always";
+    };
+    trackpad = {
+      "Clicking" = true;
+      "Dragging" = false;
+      "DragLock" = false;
+      "ActuateDetents" = true;
+      "ForceSuppressed" = false;
+      "TrackpadRightClick" = true;
+      "TrackpadThreeFingerDrag" = false;
+      "TrackpadMomentumScroll" = true;
+      "TrackpadPinch" = true;
+      "TrackpadRotate" = true;
+      "TrackpadTwoFingerDoubleTapGesture" = true;
+      "FirstClickThreshold" = 1;
+      "SecondClickThreshold" = 1;
+      "TrackpadCornerSecondaryClick" = 0;
+      "TrackpadFourFingerHorizSwipeGesture" = 2;
+      "TrackpadFourFingerVertSwipeGesture" = 2;
+      "TrackpadFourFingerPinchGesture" = 0;
+      "TrackpadThreeFingerHorizSwipeGesture" = 1;
+      "TrackpadThreeFingerVertSwipeGesture" = 2;
+      "TrackpadThreeFingerTapGesture" = 0;
+    };
+    WindowManager = {
+      "AutoHide" = true;
+      "AppWindowGroupingBehavior" = true;
+      "HideDesktop" = true;
+      "EnableTilingOptionAccelerator" = false;
+      "EnableTiledWindowMargins" = false;
+      "StandardHideWidgets" = true;
+      "StageManagerHideWidgets" = true;
+    };
+    CustomUserPreferences = {
+      "NSGlobalDomain" = { "AppleLanguages" = [ "en-JP" "ja-JP" ]; "AppleLocale" = "en_JP"; "AppleMenuBarVisibleInFullscreen" = true; "AppleMiniaturizeOnDoubleClick" = false; "NSUserDictionaryReplacementItems" = [ { "on" = 1; "replace" = "omw"; "with" = "On my way!"; } ]; };
+      "com.apple.menuextra.clock" = { "ShowAMPM" = true; "ShowDate" = 1; "ShowDayOfWeek" = false; "ShowSeconds" = true; };
+      "com.apple.controlcenter" = { "AutoHideMenuBarOption" = 3; "NSStatusItem VisibleCC Battery" = true; "NSStatusItem VisibleCC Display" = true; "NSStatusItem VisibleCC Sound" = true; "NSStatusItem VisibleCC WiFi" = true; };
+      "com.apple.HIToolbox" = { "AppleFnUsageType" = 1; "AppleCapsLockPressAndHoldToggleOff" = false; };
+    };
+  };
+}
