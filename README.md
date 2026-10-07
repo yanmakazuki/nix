@@ -5,7 +5,8 @@
 
 対象はmacOS 26系です。元のMacではmacOS 26.7.1から設定を取り込みました。
 **現時点ではMac全体の完全な復元ではありません。** macOSの管理対象設定はNixで適用し、
-アプリのインストール、Chromeの設定、アカウントへのログインなどは手動で補います。
+Chromeの保存設定もNix適用時に復元します。アプリのインストール、保護対象のChrome設定、
+アカウントへのログインなどは手動で補います。
 
 ## 復元できる範囲
 
@@ -15,7 +16,7 @@
 | macOSの外観・言語・地域・時計・一部のメニューバー設定 | nix-darwinで適用。再ログインが必要な場合あり |
 | ウィンドウ配置の動作・Stage Manager関連設定 | nix-darwinで適用 |
 | Dockに固定するアプリの順序 | nix-darwinで適用。アプリ本体は事前にインストール |
-| Chromeの表示・入力・サイト権限の設定 | `captured-chrome.nix`を参照して手動設定 |
+| Chromeの表示・入力・サイト権限の保存設定 | Chromeを終了し、Nix適用時に復元。保護対象は除外 |
 | アプリ、拡張機能、Apple Account・Google等のログイン | 手動で導入・設定 |
 | 文書・写真・パスワード・Cookie・閲覧履歴・ブックマーク | このリポジトリの対象外。別のバックアップや同期から復元 |
 | 壁紙・ディスプレイ・電源・ネットワーク・入力ソース・プライバシー権限 | 必要に応じて手動設定 |
@@ -30,12 +31,16 @@
 | `flake.nix` | 最新を取得するNixpkgs・nix-darwinのブランチ、およびMacの構成名 |
 | `configuration.nix` | CPU種別、対象ユーザー、Nixの機能設定、読み込むモジュール |
 | `captured-defaults.nix` | 実際に適用するmacOS設定。各項目の意味は日本語コメントを参照 |
-| `captured-chrome.nix` | Chrome設定の参照用データ。現在は自動適用しない |
+| `captured-chrome.nix` | Chromeの復元元データ。通常の`preferences`を適用 |
+| `chrome.nix` | Chrome復元コマンドを導入し、Nix適用時に実行するモジュール |
+| `scripts/restore_chrome_settings.py` | Chromeの終了確認、設定のマージ、バックアップを行う処理 |
+| `tests/test_restore_chrome_settings.py` | 復元処理のテスト |
 | `flake.lock` | 今回取得した依存の版をローカルで保持。Git管理には含めない |
 | `.gitignore` | 確認用JSON、ビルド結果などをGit管理から除外 |
 
-適用時の読み込み順は `flake.nix` → `configuration.nix` → `captured-defaults.nix` です。
-`captured-chrome.nix`はnix-darwinモジュールではないため、`configuration.nix`の`imports`には追加しません。
+適用時は `flake.nix` → `configuration.nix` から、macOS用の`captured-defaults.nix`とChrome用の`chrome.nix`を読み込みます。
+`chrome.nix`が`captured-chrome.nix`をJSONへ変換し、復元スクリプトに渡します。
+JSONはNixストア内で生成するため、リポジトリにJSONファイルを追加する必要はありません。
 確認用の`capture-report.json`と`chrome-capture-report.json`は復元に不要です。
 取り込みスクリプトは現在の作業ディレクトリにはありません。以降の手順では使用しません。
 
@@ -206,6 +211,10 @@ nix --extra-experimental-features 'nix-command flakes' build \
 
 ## 6. macOS設定を適用する
 
+**Chromeをメニューの「終了」またはCommand+Qで完全に終了してください。**
+ウィンドウを閉じただけではプロセスが残る場合があります。復元が終わるまでChromeを起動しません。
+Chromeのプロセスが残っていれば、事前確認で適用を止めます。
+
 ビルドした構成に含まれる`darwin-rebuild`で初回適用します。
 
 ```sh
@@ -220,29 +229,45 @@ nix-darwinは設定値に加えて、Nixデーモンやシステムのシェル�
 適用後は一度ログアウトしてログインし直し、ターミナルも開き直します。
 再起動が必要な項目は、Macを再起動して確認してください。
 
-## 7. Chromeの設定を手動で復元する
+## 7. Chromeの復元結果を確認する
 
-Chromeを起動し、必要ならGoogleアカウントにログインして、ブックマークなどの同期・復元を行います。
+「6. macOS設定を適用する」の最後に、`system.primaryUser`のユーザーとしてChrome復元処理を実行します。
+保存先はそのユーザーの`~/Library/Application Support/Google/Chrome/<プロファイル名>/Preferences`です。
+現在の保存データはDefaultプロファイルの28項目で、このうち27項目を復元します。
+設定を追加・削除した場合は、コマンドが表示する項目数を確認してください。
+
+- 保存データにある通常の`preferences`だけを反映します。
+- 保存データにない設定は維持します。辞書の一部を変更する場合も、対象外のキーは残します。
+- プロファイルがまだない場合は、ディレクトリとPreferencesを作成します。
+- 変更前のファイルを、同じディレクトリの`Preferences.before-nix-<日時>`へバックアップします。
+- 既に値が一致している場合は書き込みもバックアップ作成も行いません。
+- Chrome起動中、不正な既存ファイル、設定構造の衝突などがあれば復元を止めます。
+- 拡張機能関連などの保護対象、`policyCandidates`、ログイン情報は適用しません。
+
+現在の保存設定のうち、`extensions.theme.id`は自動適用せず、Chromeの外観設定で必要に応じて設定します。
+Chromeのポリシーや同期、内部キーの変更によって、ファイルに書き込んだ値がGUIに反映されない場合があります。
+適用後にChromeを起動して、外観・言語・スペルチェック・サイト権限などを確認してください。
+
+復元処理だけを実行したい場合は、Nix構成の適用後、対象ユーザーのターミナルで次を実行します。
+Chromeは終了しておきます。このコマンドに`sudo`は付けません。
+
+```sh
+# 変更予定の確認だけ。ファイルは書き込まない。
+restore-chrome-settings --dry-run
+
+# 保存済み設定を復元する。
+restore-chrome-settings
+```
+
+このコマンドは最後にビルド・適用した構成のデータを使用します。
+`captured-chrome.nix`を編集した後は、再度ビルド・適用してコマンド側のデータも更新します。
+
+バックアップから戻したい場合はChromeを終了し、ログに表示されたバックアップを
+該当プロファイルの`Preferences`へコピーしてからChromeを起動します。
+バックアップには元のプロファイルの設定が含まれるため、Gitへ追加せず、Mac内で保管してください。
+
+必要なGoogleアカウントへのログイン、ブックマークやパスワードの同期・復元は別途行います。
 このリポジトリにはCookie、パスワード、閲覧履歴、ブックマーク、拡張機能本体は保存していません。
-
-`captured-chrome.nix`の`profiles.Default.preferences`を参照し、Chromeの設定画面で対応する項目を戻します。
-現在の保存内容は、おおむね次の設定です。数値の正確な保存値はNixファイルを正とします。
-
-| 設定画面の対象 | 保存内容 |
-| --- | --- |
-| 外観 | テーマの配色・グレースケール、ブックマークバーの常時表示オフ |
-| 言語・スペルチェック | 選択言語`en-US,en`、英語辞書、スペルチェックとオンラインサービス有効 |
-| 支払い方法 | 自動入力時の再認証有効 |
-| アクセシビリティ | Tabキーによるリンクへのフォーカス移動と字幕に関する設定 |
-| プライバシー・サイトの設定 | 通知、センサー、USBなど、保存されている権限の既定値はブロック |
-| パフォーマンス | ネットワーク予測・プリロードの内部設定 |
-| 検索 | Googleセーフサーチの強制は無効 |
-
-Chrome内部の数値やキーは、設定画面の選択肢と常に一対一で対応するとは限りません。
-項目が見つからない場合は、同じ数値を推測で別の設定に当てはめず、使用中のChromeの仕様を確認します。
-
-`policyCandidates`の4項目も参照用です。通常の設定を管理ポリシーに置き換えると動作が変わる場合があるため、
-この手順では自動適用しません。Chrome設定の完全な自動復元には、別途実装と動作確認が必要です。
 
 ## 8. 復元を確認する
 
@@ -269,7 +294,7 @@ defaults read com.apple.AppleMultitouchTrackpad Clicking
 - Finderの表示形式と、新規ウィンドウがホームフォルダーを開くこと。
 - キーボード、トラックパッド、外観、言語・地域の設定。
 - 時計、メニューバー、ウィンドウ配置の動作。
-- Chromeで手動設定した項目と、必要なログイン・同期状態。
+- Chromeで復元した項目、手動設定した保護対象の項目、必要なログイン・同期状態。
 - 別途復元した個人データが開けること。
 
 これで、このリポジトリが対象にする設定の復元と、手動で補う作業の確認が完了です。
@@ -278,6 +303,7 @@ Mac全体を完全に再現したことを保証する手順ではありませ�
 ## 日常の変更・更新
 
 Nix設定を編集した後は、同じフォルダーでビルドしてから適用します。
+Chromeを完全に終了してから`switch`を実行してください。
 
 ```sh
 nix flake update
@@ -285,7 +311,7 @@ darwin-rebuild build --flake '.#Kazukis-MacBook-Air' --no-update-lock-file
 sudo darwin-rebuild switch --flake '.#Kazukis-MacBook-Air' --no-update-lock-file
 ```
 
-GUIで変更した管理対象の値は、次回適用時にNixの指定値へ戻ります。
+GUIで変更した管理対象の値は、次回適用時にNixの指定値へ戻ります。Chromeの復元対象も同様です。
 Nixから項目を削除してもmacOSの既定値に戻るとは限りません。戻したい値を明示して適用してください。
 
 上の手順は、設定変更の適用前にも依存を最新へ更新します。
@@ -340,11 +366,18 @@ sudo darwin-rebuild switch --rollback
 
 ## 検証状況と参考資料
 
-このREADMEの作成時点では、このMacにNixが未導入のため、Nixでの評価・ビルド・適用は未検証です。
+Chrome復元スクリプトは、初回作成、既存設定の保持、バックアップ、繰り返し実行、
+Chrome起動中の拒否、不正ファイルや不正パスの拒否をテストしています。
+
+```sh
+python3 -B -m unittest discover -s tests -v
+```
+
+このMacにNixが未導入のため、Nixでの評価・ビルド・適用とChromeの実画面での確認は未検証です。
 コマンドはnix-darwinとLixの公式手順・実装を参照しています。初期状態のMacでの一連の復元テストも未実施です。
 
 - [nix-darwinの導入手順](https://github.com/nix-darwin/nix-darwin)
 - [nix-darwinの設定オプション](https://nix-darwin.github.io/nix-darwin/manual/)
 - [Lixのインストール](https://lix.systems/install/)
 - [darwin-rebuildの実装](https://github.com/nix-darwin/nix-darwin/blob/master/pkgs/nix-tools/darwin-rebuild.sh)
-- [ChromeのmacOS向けポリシー設定](https://www.chromium.org/administrators/mac-quick-start/)
+- [Chromeの通常設定とポリシーの違い](https://www.chromium.org/administrators/configuring-other-preferences/)

@@ -65,7 +65,7 @@
       # スワイプで前後のページへ移動する。
       "AppleEnableSwipeNavigateWithScrolls" = true;
       # 対応する入力欄で自動的に大文字にする。
-      "NSAutomaticCapitalizationEnabled" = true;
+      "NSAutomaticCapitalizationEnabled" = false;
       # スペースを2回入力したときにピリオドを挿入する。
       "NSAutomaticPeriodSubstitutionEnabled" = false;
       # メニューバーを自動的に隠す。

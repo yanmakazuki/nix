@@ -13,6 +13,6 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # 読み取った現在値。手動の上書きには lib.mkForce を使う。
-  # Chromeのスナップショットはデータなので、このimportsには含めない。
-  imports = [ ./captured-defaults.nix ];
+  # Chromeは専用モジュールから保存データを読み込み、終了状態で復元する。
+  imports = [ ./captured-defaults.nix ./chrome.nix ];
 }

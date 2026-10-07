@@ -1,11 +1,11 @@
-# Chromeの保存設定。データのスナップショットであり、nix-darwinモジュールではない。
-# policyCandidatesも参照用。Chromeへの適用は行わない。
+# Chromeの復元元データ。chrome.nix経由でpreferencesを適用する。
+# policyCandidatesは参照用。保護対象の設定は復元スクリプトが除外する。
 {
   # Chromeプロファイルごとに読み取った設定。
   "profiles" = {
     # ChromeのDefaultプロファイル。
     "Default" = {
-      # Chrome内部の保存設定。これだけではChromeへ適用されない。
+      # Chromeを終了した状態で、復元スクリプトがプロファイルへ反映する保存設定。
       "preferences" = {
         # スペルチェックを有効にする。
         "browser.enable_spellchecking" = true;
@@ -34,7 +34,7 @@
           # 位置情報についての設定。
           "geolocation" = true;
         };
-        # Chromeテーマの拡張機能ID。空文字はテーマ拡張機能の指定なし。
+        # Chromeテーマの拡張機能ID。保護対象として自動適用せず、手動設定する。
         "extensions.theme.id" = "";
         # 字幕のアクセシビリティ設定。
         "accessibility.captions" = {
