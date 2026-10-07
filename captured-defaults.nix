@@ -10,8 +10,8 @@
       "show-process-indicators" = true;
       "show-recents" = false;
       "showDesktopGestureEnabled" = false;
-      "tilesize" = 45;
-      "largesize" = 102;
+      "tilesize" = 50;
+      "largesize" = 100;
       "wvous-br-corner" = 1;
       "persistent-apps" = [ { "app" = "/Applications/Google Chrome.app"; } { "app" = "/System/Applications/Utilities/Terminal.app"; } { "app" = "/Applications/ChatGPT.app"; } { "app" = "/System/Applications/Apps.app"; } ];
       "persistent-others" = [  ];
@@ -19,7 +19,7 @@
     finder = {
       "ShowExternalHardDrivesOnDesktop" = true;
       "ShowHardDrivesOnDesktop" = false;
-      "ShowRemovableMediaOnDesktop" = false;
+      "ShowRemovableMediaOnDesktop" = true;
       "FXPreferredViewStyle" = "Nlsv";
       "NewWindowTarget" = "Home";
     };
@@ -40,7 +40,7 @@
     };
     trackpad = {
       "Clicking" = true;
-      "Dragging" = false;
+      "Dragging" = true;
       "DragLock" = false;
       "ActuateDetents" = true;
       "ForceSuppressed" = false;

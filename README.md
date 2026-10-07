@@ -31,7 +31,7 @@ DockのアプリはGUIDやブックマークを除いてパスと順序を取り
 ## 再取り込み
 
 ```sh
-python3 /Users/yanmakazuki/Documents/Codex/2026-10-07/ko/outputs/mac-settings/import-settings.py
+python3 /Users/yanmakazuki/Documents/Codex/2026-10-07/ko/outputs/mac-settings/nix/import-settings.py
 ```
 
 このスクリプトはMacの設定を読み取り、`captured-defaults.nix` と `capture-report.json` を上書きします。
@@ -58,7 +58,7 @@ python3 /Users/yanmakazuki/Documents/Codex/2026-10-07/ko/outputs/mac-settings/im
 2. 構成を固定し、適用せずにビルドします。
 
    ```sh
-   cd /Users/yanmakazuki/Documents/Codex/2026-10-07/ko/outputs/mac-settings
+   cd /Users/yanmakazuki/Documents/Codex/2026-10-07/ko/outputs/mac-settings/nix
    nix --extra-experimental-features 'nix-command flakes' flake lock
    nix --extra-experimental-features 'nix-command flakes' build '.#darwinConfigurations.Kazukis-MacBook-Air.system'
    ```
@@ -105,3 +105,42 @@ sudo darwin-rebuild switch --flake '.#Kazukis-MacBook-Air'
 
 システム設定のすべてが宣言的に管理できるわけではありません。
 まずは対応する `system.defaults` オプションから増やしていく構成です。
+
+## Chromeの設定の取り込み
+
+`captured-chrome.nix` にChromeの保存設定をNix形式のデータとして保存しています。
+初回取り込みはDefaultプロファイルの30項目と拡張機能10件です。
+拡張機能にはChromeの内蔵機能も含まれます。アプリや拡張機能のインストールは行いません。
+
+対象は表示、テーマ、スペルチェック、言語、サイト権限の既定値、拡張機能の一覧と
+ピン留め、検索エンジンのテンプレートなどです。保存値がない項目は推測しません。
+サイト別の権限は明示的な設定値だけを対象にし、サイトの利用状況・履歴は除外しています。
+パスワード、Cookie、ログイン情報、拡張機能内部の設定データも対象外です。
+
+再取り込み:
+
+```sh
+python3 import-chrome-settings.py
+```
+
+生成ファイルは`captured-chrome.nix`と`chrome-capture-report.json`です。
+後者は確認用でGit管理から除外しています。
+スクリプトは自身のフォルダーに出力するため、別の場所からも実行できます。
+
+`captured-chrome.nix`はnix-darwinモジュールではなく、データのスナップショットです。
+必要なモジュールから `import ./captured-chrome.nix` でデータを参照できますが、
+`configuration.nix`の`imports`には追加していません。現在の構成を適用してもChrome設定は変わりません。
+`policyCandidates`に通知・センサー・USB権限・スペルチェックの4つのポリシー候補も保存しました。
+これらは再設定方法を検討するための参照用で、自動適用しません。
+macOSのdefaults経由では推奨レベルとして扱われ、対応しないポリシーは無視される場合があります。
+
+ブックマークバーの「常時表示オフ」と管理ポリシーの「表示しない」は動作が異なるため、
+機械的に変換していません。検索URLの内部テンプレートもそのまま保存しています。
+Chrome起動中の保存ファイルを読み取るため、直前のGUI変更がまだ保存されていない場合があります。
+今回の取り込みはChromeへの適用とNixでの評価・ビルドを行っていません。
+
+参考:
+
+- [ChromeのmacOS向けポリシー設定](https://www.chromium.org/administrators/mac-quick-start/)
+- [ブックマークバーのポリシー](https://chromeenterprise.google/policies/bookmark-bar-enabled/)
+- [Chromeポリシー定義](https://github.com/chromium/chromium/tree/main/components/policy/resources/templates/policy_definitions)
