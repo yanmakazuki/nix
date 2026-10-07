@@ -1,8 +1,4 @@
-capture-report.json
-chrome-capture-report.json
-# 依存は実行前に更新する。取得した版はローカルでのみ保持する。
 flake.lock
 result
 result-*
-__pycache__/
 .DS_Store
