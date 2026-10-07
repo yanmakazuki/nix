@@ -11,7 +11,6 @@ import subprocess
 import sys
 import tempfile
 
-# Protected or installation-specific preferences are never edited directly.
 PROTECTED = ('extensions.', 'default_search_provider', 'protection.',
              'google.services.', 'account_values.')
 PROTECTED_EXACT = {'homepage', 'homepage_is_newtabpage', 'browser.show_home_button',
@@ -56,7 +55,6 @@ def set_preference(target, path, value):
 
 
 def reject_symlink(path):
-    # Include ancestor directories: never follow a link outside the profile tree.
     if any(p.is_symlink() for p in [path, *path.parents]):
         raise ValueError(f'シンボリックリンクの保存先には書き込みません: {path}')
 
@@ -94,7 +92,6 @@ def build_plans(snapshot, base):
 
 def restore(snapshot, base, dry_run=False):
     require_closed()
-    # Validate all profiles before changing any of them.
     plans = build_plans(snapshot, base)
     for plan in plans:
         name, path = plan['name'], plan['path']
@@ -125,7 +122,6 @@ def restore(snapshot, base, dry_run=False):
                 stream.write(plan['content'])
                 stream.flush()
                 os.fsync(stream.fileno())
-            # Check again immediately before replacing the file.
             require_closed()
             if (path.read_bytes() if path.exists() else None) != current:
                 raise RuntimeError(f'{name}: 書き込み直前にPreferencesが変更されました。')

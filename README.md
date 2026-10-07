@@ -32,13 +32,13 @@ Chromeの保存設定もNix適用時に復元します。Chrome・ChatGPT・VS C
 | `flake.nix` | 最新を取得するNixpkgs・nix-darwinの参照先、およびMacの構成名 |
 | `configuration.nix` | CPU種別、対象ユーザー、Nixの機能設定、読み込むモジュール |
 | `apps.nix` | NixpkgsからのGUIアプリ・CUIコマンドの導入・更新 |
-| `captured-defaults.nix` | 実際に適用するmacOS設定。各項目の意味は日本語コメントを参照 |
+| `captured-defaults.nix` | 実際に適用するmacOS設定 |
 | `captured-chrome.nix` | Chromeの復元元データ。通常の`preferences`を適用 |
 | `chrome.nix` | Chrome復元コマンドを導入し、Nix適用時に実行するモジュール |
 | `scripts/restore_chrome_settings.py` | Chromeの終了確認、設定のマージ、バックアップを行う処理 |
 | `tests/test_restore_chrome_settings.py` | 復元処理のテスト |
 | `flake.lock` | 今回取得した依存の版をローカルで保持。Git管理には含めない |
-| `.gitignore` | 確認用JSON、ビルド結果などをGit管理から除外 |
+| `.gitignore` | 依存のロックファイル、ビルド結果などをGit管理から除外 |
 
 適用時は `flake.nix` → `configuration.nix` から、macOS用の`captured-defaults.nix`、Chrome用の`chrome.nix`、アプリ用の`apps.nix`を読み込みます。
 `chrome.nix`が`captured-chrome.nix`をJSONへ変換し、復元スクリプトに渡します。
@@ -274,11 +274,15 @@ Chromeのポリシーや同期、内部キーの変更によって、ファイ�
 復元処理だけを実行したい場合は、Nix構成の適用後、対象ユーザーのターミナルで次を実行します。
 Chromeは終了しておきます。このコマンドに`sudo`は付けません。
 
-```sh
-# 変更予定の確認だけ。ファイルは書き込まない。
-restore-chrome-settings --dry-run
+変更予定の確認だけを行う場合：
 
-# 保存済み設定を復元する。
+```sh
+restore-chrome-settings --dry-run
+```
+
+保存済み設定を復元する場合：
+
+```sh
 restore-chrome-settings
 ```
 
@@ -401,6 +405,8 @@ MDMなど別の管理機構があるMacでは、その設定が優先される�
 sudo darwin-rebuild switch --rollback
 ```
 
+Chromeプロファイルの変更もロールバック対象ではありません。前の構成のChrome設定が再適用されるため、
+適用前の状態へ戻すにはChromeを終了して`Preferences.before-nix-<日時>`から戻します。
 初回適用前のmacOS全体を復元するコマンドではありません。
 前の構成に含まれないmacOS設定まで元に戻るとは限らないため、必要な値を明示して再適用します。
 
