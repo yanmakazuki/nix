@@ -12,6 +12,7 @@
     pkgs.rustfmt
     pkgs.clippy
     pkgs.git
+    pkgs.docker
     pkgs.ripgrep
     pkgs.fd
     pkgs.fzf
@@ -19,6 +20,17 @@
     pkgs.tree-sitter
     pkgs.curl
   ];
+
+  # ログイン時にDocker用のLinux VMを起動する。
+  services.colima = {
+    enable = true;
+    colimaHomeDir = ".colima";
+    profiles.default = {
+      isActive = true;
+      isService = true;
+      setDockerHost = false;
+    };
+  };
 
   xdg.enable = true;
   programs.neovim = {
