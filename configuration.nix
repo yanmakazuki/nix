@@ -7,5 +7,5 @@
   nix.package = pkgs.nixVersions.latest;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  imports = [ ./captured-defaults.nix ./chrome.nix ./apps.nix ];
+  imports = [ ./macos.nix ./chrome.nix ./apps.nix ./neovim.nix ];
 }

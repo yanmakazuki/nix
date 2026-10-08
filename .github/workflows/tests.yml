@@ -1,0 +1,71 @@
+name: Tests
+
+# PRの作成・更新・再オープン時に実行する。Actions画面からの手動実行にも対応。
+'on':
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 同じPRが更新された場合は、古いコミットの実行を中止する。
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-tests:
+    name: Python tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+
+      # テストは一時ファイルとモックを使用し、実際のChrome・Terminal設定には書き込まない。
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
+  syntax-checks:
+    name: Nix and Lua syntax
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install syntax checkers
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends nix-bin lua5.1
+
+      # 構文だけを検証する。nix-darwinのビルドや設定の適用は行わない。
+      - name: Check Nix syntax
+        shell: bash
+        run: |
+          while IFS= read -r -d '' file; do
+            echo "Checking ${file}"
+            nix-instantiate --parse "$file" > /dev/null
+          done < <(git ls-files --cached -z -- '*.nix')
+
+      - name: Check Lua syntax
+        shell: bash
+        run: |
+          while IFS= read -r -d '' file; do
+            echo "Checking ${file}"
+            luac5.1 -p "$file"
+          done < <(git ls-files --cached -z -- '*.lua')

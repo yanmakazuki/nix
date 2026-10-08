@@ -1,3 +1,4 @@
+"""Chrome復元のマージ、バックアップ、書き込みを中止すべき条件を検証する。"""
 import importlib.util
 import json
 from pathlib import Path
@@ -11,6 +12,7 @@ restore = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(restore)
 
 
+# Chromeの起動状態をモックし、一時プロファイルで実データを変更せずに検証する。
 class RestoreTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1])

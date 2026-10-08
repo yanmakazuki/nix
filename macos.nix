@@ -1,5 +1,20 @@
-{ ... }:
+{ config, lib, pkgs, ... }:
+let
+  setupTerminalFont = pkgs.writeShellApplication {
+    name = "setup-terminal-font";
+    text = ''
+      exec ${pkgs.python3}/bin/python3 ${./scripts/setup_terminal_font.py} --font-dir ${pkgs.nerd-fonts.hack}
+    '';
+  };
+in
 {
+  fonts.packages = [ pkgs.nerd-fonts.hack ];
+  environment.systemPackages = [ setupTerminalFont ];
+
+  system.activationScripts.postActivation.text = lib.mkAfter ''
+    /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- ${setupTerminalFont}/bin/setup-terminal-font
+  '';
+
   system.defaults = {
     "dock" = {
       "autohide" = true;

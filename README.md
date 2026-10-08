@@ -5,7 +5,7 @@
 
 対象はmacOS 26系です。元のMacではmacOS 26.7.1から設定を取り込みました。
 **現時点ではMac全体の完全な復元ではありません。** macOSの管理対象設定はNixで適用し、
-Chromeの保存設定もNix適用時に復元します。Chrome・ChatGPT・VS CodeのGUIとCodex CLIも導入します。
+Chromeの保存設定もNix適用時に復元します。Chrome・ChatGPT・VS CodeのGUIとCodex CLI、Neovim・LazyVim、Hack Nerd Fontも導入します。
 保護対象のChrome設定、拡張機能、アカウントへのログインなどは手動で補います。
 
 ## 復元できる範囲
@@ -32,16 +32,19 @@ Chromeの保存設定もNix適用時に復元します。Chrome・ChatGPT・VS C
 | `flake.nix` | 最新を取得するNixpkgs・nix-darwinの参照先、およびMacの構成名 |
 | `configuration.nix` | CPU種別、対象ユーザー、Nixの機能設定、読み込むモジュール |
 | `apps.nix` | NixpkgsからのGUIアプリ・CUIコマンドの導入・更新 |
-| `captured-defaults.nix` | 実際に適用するmacOS設定 |
-| `captured-chrome.nix` | Chromeの復元元データ。通常の`preferences`を適用 |
-| `chrome.nix` | Chrome復元コマンドを導入し、Nix適用時に実行するモジュール |
+| `macos.nix` | macOS設定、Hack Nerd Fontの導入、Terminalのフォント設定 |
+| `neovim.nix` | NeovimとLazyVim用コマンドの導入、設定ファイルの配置 |
+| `nvim/` | LazyVimをデフォルト設定で起動するためのLuaファイル |
+| `scripts/setup_lazyvim.py` | 既存設定をバックアップしてLazyVim設定を配置 |
+| `scripts/setup_terminal_font.py` | Terminalの既存プロファイルのフォントを変更 |
+| `chrome.nix` | Chromeの復元元データと復元コマンドを定義し、Nix適用時に通常の`preferences`を復元するモジュール |
 | `scripts/restore_chrome_settings.py` | Chromeの終了確認、設定のマージ、バックアップを行う処理 |
 | `tests/test_restore_chrome_settings.py` | 復元処理のテスト |
 | `flake.lock` | 今回取得した依存の版をローカルで保持。Git管理には含めない |
 | `.gitignore` | 依存のロックファイル、ビルド結果などをGit管理から除外 |
 
-適用時は `flake.nix` → `configuration.nix` から、macOS用の`captured-defaults.nix`、Chrome用の`chrome.nix`、アプリ用の`apps.nix`を読み込みます。
-`chrome.nix`が`captured-chrome.nix`をJSONへ変換し、復元スクリプトに渡します。
+適用時は `flake.nix` → `configuration.nix` から、macOS用の`macos.nix`、Chrome用の`chrome.nix`、アプリ用の`apps.nix`、Neovim用の`neovim.nix`を読み込みます。
+`chrome.nix`が内部の`chromeSettings`をJSONへ変換し、復元スクリプトに渡します。
 JSONはNixストア内で生成するため、リポジトリにJSONファイルを追加する必要はありません。
 確認用の`capture-report.json`と`chrome-capture-report.json`は復元に不要です。
 取り込みスクリプトは現在の作業ディレクトリにはありません。以降の手順では使用しません。
@@ -164,7 +167,7 @@ Macの実際のホスト名が違っていても、下記のコマンドでこ�
 
 ### アプリの導入設定
 
-`captured-defaults.nix`の`persistent-apps`は、次のパスを参照します。
+`macos.nix`の`persistent-apps`は、次のパスを参照します。
 
 - `/Applications/Nix Apps/Google Chrome.app`
 - `/System/Applications/Utilities/Terminal.app`
@@ -287,7 +290,7 @@ restore-chrome-settings
 ```
 
 このコマンドは最後にビルド・適用した構成のデータを使用します。
-`captured-chrome.nix`を編集した後は、再度ビルド・適用してコマンド側のデータも更新します。
+`chrome.nix`の`chromeSettings`を編集した後は、再度ビルド・適用してコマンド側のデータも更新します。
 
 バックアップから戻したい場合はChromeを終了し、ログに表示されたバックアップを
 該当プロファイルの`Preferences`へコピーしてからChromeを起動します。
@@ -432,3 +435,46 @@ python3 -B -m unittest discover -s tests -v
 - [nix-darwinのGUIアプリ配置処理](https://github.com/nix-darwin/nix-darwin/blob/master/modules/system/applications.nix)
 - [NixpkgsのChrome（macOS対応）](https://github.com/NixOS/nixpkgs/blob/nixpkgs-unstable/pkgs/by-name/go/google-chrome/package.nix)
 - [NixpkgsのChatGPT](https://github.com/NixOS/nixpkgs/blob/nixpkgs-unstable/pkgs/by-name/ch/chatgpt/package.nix)
+
+## Neovim・LazyVim・Terminalのフォント
+
+Nix適用時にNeovim、Git、ripgrep、fd、fzf、lazygit、tree-sitter CLI、curlを導入し、
+`nvim/`のファイルを対象ユーザーの`~/.config/nvim/`に配置します。
+`XDG_CONFIG_HOME`が設定されている場合はその配下を使用します。
+既存ファイルに変更がある場合は、設定ディレクトリを隣の`nvim.before-nix-日時`にバックアップします。
+同じ設定の再適用ではバックアップを増やしません。管理対象外のファイルは保持します。
+`nvim/init.lua`と`nvim/lua/config/lazy.lua`でLazyVimを読み込み、エディタ設定はLazyVimのデフォルトを使用します。
+管理対象ファイルのローカル編集は、次のNix適用時にバックアップ後、置き換えられます。
+
+適用後に`nvim`を起動すると、lazy.nvim・LazyVimとプラグインをネットワークから取得します。
+初回起動にはインターネット接続が必要です。起動後に`:LazyHealth`で確認してください。
+構文解析器のコンパイルには「2」で導入するCommand Line ToolsのCコンパイラを使用します。
+言語サーバー等はLazyVimのMasonから必要に応じて追加します。
+詳しい要件は[LazyVim公式ドキュメント](https://www.lazyvim.org/)を参照してください。
+
+Hack Nerd Fontは`fonts.packages`で導入します。
+Terminalの既存プロファイルすべて（標準・起動用を含む）のフォントを
+**Hack Nerd Font Mono・13pt**に変更し、色・その他の設定を保持します。
+変更前のTerminal設定は`~/Library/Application Support/nix-settings/terminal-backups/`に保存します。
+適用後はTerminalを完全に終了して再起動してください。
+再適用だけを行う場合は、対象ユーザーで`setup-terminal-font`を実行できます。
+Terminal.appはLazyVim推奨のtrue color・undercurl対応端末には含まれないため、表示には制限があります。
+
+## プルリクエストの自動テスト
+
+`.github/workflows/tests.yml`により、PRの作成・更新・再オープン時に以下を実行します。
+Actions画面から手動実行することもできます。
+
+- LinuxとmacOSでPythonのユニットテストを実行（Python 3.13）。
+- Git管理しているNixファイルとLuaファイルの構文を確認。
+
+テストでは一時ファイルとモックを使用します。Chrome・Terminalへの実際の設定適用や、
+nix-darwinの依存解決・ビルドは検証対象に含まれません。
+ローカルでPythonテストを実行する場合は、リポジトリのルートで以下を実行します。
+
+```sh
+python3 -m unittest discover -s tests -v
+```
+
+テスト成功をマージの必須条件にする場合は、GitHubのブランチ保護またはRulesetsで
+`Python tests (ubuntu-24.04)`、`Python tests (macos-15)`、`Nix and Lua syntax`を必須チェックに指定します。

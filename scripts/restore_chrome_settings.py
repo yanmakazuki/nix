@@ -1,4 +1,4 @@
-"""Merge captured Chrome preferences into closed Chrome profiles."""
+"""Chromeが終了していることを確認し、保存済み設定を既存プロファイルにマージする。"""
 import argparse
 import copy
 import datetime
@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 
+# Chrome側の整合性保護やアカウントに関わる設定は、自動復元の対象から除外する。
 PROTECTED = ('extensions.', 'default_search_provider', 'protection.',
              'google.services.', 'account_values.')
 PROTECTED_EXACT = {'homepage', 'homepage_is_newtabpage', 'browser.show_home_button',
@@ -18,6 +19,7 @@ PROTECTED_EXACT = {'homepage', 'homepage_is_newtabpage', 'browser.show_home_butt
 
 
 def chrome_is_running():
+    """実行ユーザーのChrome本体・関連プロセスが起動しているか確認する。"""
     result = subprocess.run(['/bin/ps', '-U', str(os.getuid()), '-o', 'comm='],
                             check=True, capture_output=True, text=True)
     return any('/Google Chrome.app/Contents/' in line or
@@ -30,6 +32,7 @@ def require_closed():
 
 
 def merge_dict(target, updates):
+    """入れ子の辞書をマージし、復元データに含まれない既存キーは残す。"""
     for key, value in updates.items():
         if isinstance(value, dict) and isinstance(target.get(key), dict):
             merge_dict(target[key], value)
@@ -38,6 +41,7 @@ def merge_dict(target, updates):
 
 
 def set_preference(target, path, value):
+    """ドット区切りの設定キーを、ChromeのJSONの階層に展開して設定する。"""
     parts = path.split('.')
     if not all(parts):
         raise ValueError(f'Invalid preference path: {path}')
@@ -55,11 +59,13 @@ def set_preference(target, path, value):
 
 
 def reject_symlink(path):
+    """想定外の保存先に書き込まないよう、親ディレクトリを含むリンクを拒否する。"""
     if any(p.is_symlink() for p in [path, *path.parents]):
         raise ValueError(f'シンボリックリンクの保存先には書き込みません: {path}')
 
 
 def build_plans(snapshot, base):
+    """全プロファイルを検証し、ディスクに書き込まずに復元内容を組み立てる。"""
     profiles = snapshot.get('profiles')
     if not isinstance(profiles, dict) or not profiles:
         raise ValueError('profilesが空、または形式が不正です。')
@@ -92,6 +98,7 @@ def build_plans(snapshot, base):
 
 def restore(snapshot, base, dry_run=False):
     require_closed()
+    # 後続プロファイルの検証に失敗しても、先行プロファイルを変更せずに終了する。
     plans = build_plans(snapshot, base)
     for plan in plans:
         name, path = plan['name'], plan['path']
@@ -105,10 +112,12 @@ def restore(snapshot, base, dry_run=False):
             continue
         require_closed()
         reject_symlink(path)
+        # 読み取り後に別の処理が変更していた場合は、その変更を上書きしない。
         current = path.read_bytes() if path.exists() else None
         if current != plan['original']:
             raise RuntimeError(f'{name}: 読み取り後にPreferencesが変更されました。再実行してください。')
         path.parent.mkdir(parents=True, exist_ok=True)
+        # 元データをそのまま保存する。バックアップは所有ユーザーだけが読み書きできる。
         if current is not None:
             stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
             backup = path.with_name('Preferences.before-nix-' + stamp)
@@ -116,12 +125,15 @@ def restore(snapshot, base, dry_run=False):
             with os.fdopen(fd, 'wb') as stream:
                 stream.write(current)
             print(f'{name}: バックアップ: {backup}')
+        # 同じディレクトリに一時ファイルを作り、書き込み完了後に原子的に置き換える。
+        # 途中で失敗しても、既存のPreferencesを不完全なJSONにしない。
         fd, temporary = tempfile.mkstemp(prefix='.Preferences.nix-', dir=path.parent)
         try:
             with os.fdopen(fd, 'wb') as stream:
                 stream.write(plan['content'])
                 stream.flush()
                 os.fsync(stream.fileno())
+            # 復元中にChromeが起動していないか、置き換え直前にも確認する。
             require_closed()
             if (path.read_bytes() if path.exists() else None) != current:
                 raise RuntimeError(f'{name}: 書き込み直前にPreferencesが変更されました。')
@@ -140,9 +152,11 @@ def main(argv=None):
     parser.add_argument('--check-closed', action='store_true')
     args = parser.parse_args(argv)
     try:
+        # root所有の設定を作らないよう、Nix側から対象ユーザーに切り替えて実行する。
         if os.geteuid() == 0:
             raise RuntimeError('対象ユーザーとして実行してください（sudoで直接実行しないでください）。')
         require_closed()
+        # Nixの事前チェックでは、Chromeの終了確認だけを行って戻る。
         if args.check_closed:
             return 0
         base = args.user_data_dir or Path(pwd.getpwuid(os.getuid()).pw_dir) / 'Library/Application Support/Google/Chrome'
