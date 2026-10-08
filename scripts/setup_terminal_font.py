@@ -10,7 +10,7 @@ import subprocess
 
 DOMAIN = 'com.apple.Terminal'
 # 表示名ではなく、AppKitがフォントを検索するPostScript名を指定する。
-FONT_NAME = 'HackNerdFontMono-Regular'
+FONT_NAME = 'HackNFM-Regular'
 FONT_SIZE = 13
 
 
@@ -31,8 +31,12 @@ const font = $.NSFont.fontWithNameSize(FONT_NAME, FONT_SIZE);
 if (!font || font.isNil()) throw new Error("Hack Nerd Font Mono is unavailable");
 $.NSKeyedArchiver.archivedDataWithRootObject(font).base64EncodedStringWithOptions(0).js;
 '''.replace('FONT_PATHS', json.dumps(fonts)).replace('FONT_NAME', json.dumps(FONT_NAME)).replace('FONT_SIZE', str(FONT_SIZE))
-    result = subprocess.run(['/usr/bin/osascript', '-l', 'JavaScript', '-'],
-                            input=script, text=True, capture_output=True, check=True)
+    try:
+        result = subprocess.run(['/usr/bin/osascript', '-l', 'JavaScript', '-'],
+                                input=script, text=True, capture_output=True, check=True)
+    except subprocess.CalledProcessError as error:
+        detail = (error.stderr or error.stdout or str(error)).strip()
+        raise RuntimeError(f'Terminal font archive failed: {detail}') from error
     return base64.b64decode(result.stdout.strip(), validate=True)
 
 
