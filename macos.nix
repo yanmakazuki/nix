@@ -12,9 +12,12 @@ in
   environment.systemPackages = [ setupTerminalFont ];
   security.pam.services.sudo_local.touchIdAuth = true;
 
+  # -currentHostで読み取った設定は、Home Managerからホスト単位で書き込む。
+  # 下のCustomUserPreferencesは通常のユーザー設定として書き込む。
   home-manager.users.${config.system.primaryUser}.targets.darwin.currentHostDefaults = {
     "com.apple.Spotlight".MenuItemHidden = true;
     "com.apple.controlcenter" = {
+      # 8・2は現在のMacから読み取った内部値。表示フラグとは別に保持する。
       FocusModes = 8;
       NowPlaying = 8;
       ScreenMirroring = 8;
@@ -36,10 +39,15 @@ in
   '';
 
   system.defaults = {
-    # VisibleCC flags alone do not configure these controls' menu bar mode.
+    # VisibleCCの表示フラグに加え、標準オプションでメニューバーの表示モードも設定する。
     controlcenter = {
       Display = true;
       Sound = true;
+    };
+    menuExtraClock = {
+      ShowAMPM = true;
+      ShowDate = 1; # 日付を常に表示する。
+      ShowDayOfWeek = false;
     };
     dock = {
       autohide = true;
@@ -123,18 +131,16 @@ in
         AppleLocale = "en_JP";
         AppleMenuBarVisibleInFullscreen = true;
       };
-      "com.apple.menuextra.clock" = {
-        ShowAMPM = true;
-        ShowDate = 1;
-        ShowDayOfWeek = false;
-      };
       "com.apple.controlcenter" = {
+        # 自動非表示の内部値を、現在のMacから読み取った状態で保持する。
         AutoHideMenuBarOption = 3;
+        # 現在の配置値を保持する。BentoBox-0はコントロールセンター。
         "NSStatusItem Preferred Position Battery" = 194;
         "NSStatusItem Preferred Position BentoBox-0" = 104;
         "NSStatusItem Preferred Position Display" = 236;
         "NSStatusItem Preferred Position Sound" = 272;
         "NSStatusItem Preferred Position WiFi" = 220;
+        # 各項目の表示フラグ。表示モードの設定と併せて管理する。
         "NSStatusItem VisibleCC Battery" = true;
         "NSStatusItem VisibleCC BentoBox-0" = true;
         "NSStatusItem VisibleCC Clock" = true;

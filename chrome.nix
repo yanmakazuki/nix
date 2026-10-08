@@ -19,7 +19,6 @@ let
           "profile.content_settings.enable_quiet_permission_ui" = {
             "geolocation" = true;
           };
-          "extensions.theme.id" = "";
           "accessibility.captions" = {
             "headless_caption_enabled" = false;
           };
@@ -38,12 +37,6 @@ let
           "profile.default_content_setting_values.usb_guard" = 2;
           "profile.default_content_setting_values.vr" = 2;
           "profile.default_content_setting_values.web_app_installation" = 2;
-        };
-        "policyCandidates" = {
-          "DefaultNotificationsSetting" = 2;
-          "DefaultSensorsSetting" = 2;
-          "DefaultWebUsbGuardSetting" = 2;
-          "SpellcheckEnabled" = true;
         };
       };
     };
