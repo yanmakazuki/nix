@@ -1,11 +1,11 @@
 # Macの設定を復元する
 
-このリポジトリは、Apple Silicon搭載Macの設定をnix-darwinで管理します。
+このリポジトリは、Apple Silicon搭載Macの設定をnix-darwin、開発ツールとユーザー設定をHome Managerで管理します。
 初期設定が完了したMacにNixを導入し、このリポジトリを取得して設定を適用するまでの手順です。
 
 対象はmacOS 26系です。元のMacではmacOS 26.7.1から設定を取り込みました。
 **現時点ではMac全体の完全な復元ではありません。** macOSの管理対象設定はNixで適用し、
-Chromeの保存設定もNix適用時に復元します。Chrome・ChatGPT・VS CodeのGUIとCodex CLI、Neovim・LazyVim、Hack Nerd Fontも導入します。
+Chromeの保存設定もNix適用時に復元します。Chrome・ChatGPT・VS CodeのGUIとCodex CLI、Neovim・LazyVim、Hack Nerd Font、Node.js・npm、Rust・rust-analyzerも導入します。
 保護対象のChrome設定、拡張機能、アカウントへのログインなどは手動で補います。
 
 ## 復元できる範囲
@@ -17,7 +17,9 @@ Chromeの保存設定もNix適用時に復元します。Chrome・ChatGPT・VS C
 | ウィンドウ配置の動作・Stage Manager関連設定 | nix-darwinで適用 |
 | Dockに固定するアプリの順序 | nix-darwinで適用。Chrome・ChatGPT本体も同じ適用処理で導入 |
 | Chromeの表示・入力・サイト権限の保存設定 | Chromeを終了し、Nix適用時に復元。保護対象は除外 |
-| Chrome・ChatGPT・VS CodeのGUI、Codex CLI、VS Codeのコマンド | Nixpkgsから直接導入・更新 |
+| Chrome・ChatGPT・VS CodeのGUI、VS Codeのコマンド | nix-darwinから導入・更新 |
+| Codex CLI・Neovim・Node.js・Rustと開発用コマンド | Home Managerから導入・更新 |
+| LazyVimの起動設定 | Home Managerで設定ファイルを管理 |
 | その他のアプリ、拡張機能、Apple Account・Google等のログイン | 手動で導入・設定 |
 | 文書・写真・パスワード・Cookie・閲覧履歴・ブックマーク | このリポジトリの対象外。別のバックアップや同期から復元 |
 | 壁紙・ディスプレイ・電源・ネットワーク・入力ソース・プライバシー権限 | 必要に応じて手動設定 |
@@ -29,13 +31,12 @@ Chromeの保存設定もNix適用時に復元します。Chrome・ChatGPT・VS C
 
 | ファイル | 役割 |
 | --- | --- |
-| `flake.nix` | 最新を取得するNixpkgs・nix-darwinの参照先、およびMacの構成名 |
+| `flake.nix` | 最新を取得するNixpkgs・nix-darwin・Home Managerの参照先、およびMacの構成名 |
 | `configuration.nix` | CPU種別、対象ユーザー、Nixの機能設定、読み込むモジュール |
-| `apps.nix` | NixpkgsからのGUIアプリ・CUIコマンドの導入・更新 |
+| `apps.nix` | GUIアプリの導入・更新と非自由ライセンスの許可 |
 | `macos.nix` | macOS設定、Hack Nerd Fontの導入、Terminalのフォント設定 |
-| `neovim.nix` | NeovimとLazyVim用コマンドの導入、設定ファイルの配置 |
+| `home.nix` | Home Managerで開発ツールとLazyVimの設定ファイルを管理 |
 | `nvim/` | LazyVimをデフォルト設定で起動するためのLuaファイル |
-| `scripts/setup_lazyvim.py` | 既存設定をバックアップしてLazyVim設定を配置 |
 | `scripts/setup_terminal_font.py` | Terminalの既存プロファイルのフォントを変更 |
 | `chrome.nix` | Chromeの復元元データと復元コマンドを定義し、Nix適用時に通常の`preferences`を復元するモジュール |
 | `scripts/restore_chrome_settings.py` | Chromeの終了確認、設定のマージ、バックアップを行う処理 |
@@ -43,7 +44,9 @@ Chromeの保存設定もNix適用時に復元します。Chrome・ChatGPT・VS C
 | `flake.lock` | 今回取得した依存の版をローカルで保持。Git管理には含めない |
 | `.gitignore` | 依存のロックファイル、ビルド結果などをGit管理から除外 |
 
-適用時は `flake.nix` → `configuration.nix` から、macOS用の`macos.nix`、Chrome用の`chrome.nix`、アプリ用の`apps.nix`、Neovim用の`neovim.nix`を読み込みます。
+適用時は `flake.nix` → `configuration.nix` から、macOS用の`macos.nix`、Chrome用の`chrome.nix`、GUIアプリ用の`apps.nix`を読み込みます。
+`flake.nix`でHome Managerをnix-darwinに組み込み、`configuration.nix`で対象ユーザーの`home.nix`を読み込みます。
+Home Managerも同じ`darwin-rebuild switch`で適用され、別の適用コマンドは不要です。
 `chrome.nix`が内部の`chromeSettings`をJSONへ変換し、復元スクリプトに渡します。
 JSONはNixストア内で生成するため、リポジトリにJSONファイルを追加する必要はありません。
 確認用の`capture-report.json`と`chrome-capture-report.json`は復元に不要です。
@@ -159,7 +162,9 @@ system.primaryUser = "yanmakazuki";
 ```
 
 この指定でユーザーを作成するわけではありません。macOSで作成済みのユーザーを指定してください。
-`system.stateVersion = 7;`は互換性の指定なので、通常は変更しません。
+`system.stateVersion = 7;`と`home.nix`の`home.stateVersion = "26.05";`は互換性の指定なので、通常は変更しません。
+Home Managerのユーザー名とホームディレクトリは`system.primaryUser`から決まります。
+ホームディレクトリが`/Users/<ユーザー名>`と異なる場合は、`configuration.nix`の`users.users`も修正してください。
 
 構成名`Kazukis-MacBook-Air`はNix側の識別名です。
 Macの実際のホスト名が違っていても、下記のコマンドでこの名前を明示していれば構成を選択できます。
@@ -174,7 +179,7 @@ Macの実際のホスト名が違っていても、下記のコマンドでこ�
 - `/Applications/Nix Apps/ChatGPT.app`
 - `/System/Applications/Apps.app`
 
-`apps.nix`により、初回の`darwin-rebuild switch`で次のアプリをNixpkgsから導入します。
+`apps.nix`（GUIアプリ）と`home.nix`（開発ツール）により、初回の`darwin-rebuild switch`で次を導入します。
 事前にChromeやChatGPTを手動インストールする必要はありません。
 
 | 用途 | 導入するもの |
@@ -183,6 +188,8 @@ Macの実際のホスト名が違っていても、下記のコマンドでこ�
 | ChatGPT GUI | `/Applications/Nix Apps/ChatGPT.app` |
 | OpenAI CUI | Codex CLIの`codex`コマンド |
 | VS Code GUI・CUI | `/Applications/Nix Apps/Visual Studio Code.app`と`code`コマンド |
+| Node.js・npm | `node`・`npm`・`npx`コマンド（`pkgs.nodejs`から導入） |
+| Rust開発 | `rustc`・`cargo`・`rust-analyzer`・`rustfmt`・Clippy |
 
 ChatGPTのCUIとしてCodex CLIを採用しています。端末で使うコーディングエージェントで、
 ChatGPT GUIの全機能を端末に再現するものではありません。ChromeのCUIは追加しません。
@@ -438,13 +445,17 @@ python3 -B -m unittest discover -s tests -v
 
 ## Neovim・LazyVim・Terminalのフォント
 
-Nix適用時にNeovim、Git、ripgrep、fd、fzf、lazygit、tree-sitter CLI、curlを導入し、
-`nvim/`のファイルを対象ユーザーの`~/.config/nvim/`に配置します。
-`XDG_CONFIG_HOME`が設定されている場合はその配下を使用します。
-既存ファイルに変更がある場合は、設定ディレクトリを隣の`nvim.before-nix-日時`にバックアップします。
-同じ設定の再適用ではバックアップを増やしません。管理対象外のファイルは保持します。
-`nvim/init.lua`と`nvim/lua/config/lazy.lua`でLazyVimを読み込み、エディタ設定はLazyVimのデフォルトを使用します。
-管理対象ファイルのローカル編集は、次のNix適用時にバックアップ後、置き換えられます。
+Home ManagerでNeovim、Codex CLI、Node.js・npm、Rustと開発用コマンドを対象ユーザーに導入します。
+LazyVimの起動設定は`programs.neovim.initLua`と`xdg.configFile`で管理し、
+`~/.config/nvim/init.lua`と`~/.config/nvim/lua/config/lazy.lua`を配置します。
+`xdg.configHome`を変更する場合は、その指定先が配置先になります。
+エディタ設定はLazyVimのデフォルトを使用します。
+
+移行時に競合する既存ファイルは、隣の`<ファイル名>.before-home-manager`へ退避します。
+同名のバックアップがすでにある場合は上書きせず停止するので、退避済みファイルを別名で保管して再適用してください。
+管理対象の設定は読み取り専用です。変更はリポジトリの`nvim/`で行い、再適用します。
+ディレクトリ全体をリンクしないため、LazyVimの`lazy-lock.json`は引き続き書き込めます。
+管理対象外の既存ファイルは保持されます。以前の独自設定があれば、その内容も読み込まれる可能性があります。
 
 適用後に`nvim`を起動すると、lazy.nvim・LazyVimとプラグインをネットワークから取得します。
 初回起動にはインターネット接続が必要です。起動後に`:LazyHealth`で確認してください。
@@ -478,3 +489,6 @@ python3 -m unittest discover -s tests -v
 
 テスト成功をマージの必須条件にする場合は、GitHubのブランチ保護またはRulesetsで
 `Python tests (ubuntu-24.04)`、`Python tests (macos-15)`、`Nix and Lua syntax`を必須チェックに指定します。
+
+Home Managerの構成は[nix-darwinへの公式統合手順](https://github.com/nix-community/home-manager/blob/master/docs/manual/nix-flakes/nix-darwin.md)に沿っています。
+Chrome設定のマージとTerminalフォントの変更は、引き続きnix-darwinの適用処理から専用スクリプトを実行します。

@@ -6,7 +6,6 @@
   environment.systemPackages = [
     pkgs.google-chrome
     pkgs.chatgpt
-    pkgs.codex
     pkgs.vscode
   ];
 }
