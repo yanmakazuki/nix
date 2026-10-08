@@ -5,7 +5,7 @@
 
   home.packages = [
     pkgs.codex
-    pkgs.nodejs # npm・npxも同梱する。
+    pkgs.nodejs
     pkgs.rustc
     pkgs.cargo
     pkgs.rust-analyzer

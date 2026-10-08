@@ -20,11 +20,19 @@ in
       ScreenMirroring = 8;
       Timer = 8;
       Weather = 2;
+      WiFi = 8;
     };
   };
 
   system.activationScripts.postActivation.text = lib.mkAfter ''
     /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- ${setupTerminalFont}/bin/setup-terminal-font
+  '';
+
+  # 現在の電源設定を再現する。画面スリープは電源種別で分ける。
+  system.activationScripts.power.text = lib.mkAfter ''
+    /usr/bin/pmset -a lowpowermode 1 sleep 1 disksleep 10 powernap 1
+    /usr/bin/pmset -b displaysleep 2 lessbright 1
+    /usr/bin/pmset -c displaysleep 10
   '';
 
   system.defaults = {
@@ -122,9 +130,10 @@ in
       };
       "com.apple.controlcenter" = {
         AutoHideMenuBarOption = 3;
-        "NSStatusItem Preferred Position BentoBox-0" = 184;
-        "NSStatusItem Preferred Position Display" = 258;
-        "NSStatusItem Preferred Position Sound" = 294;
+        "NSStatusItem Preferred Position Battery" = 194;
+        "NSStatusItem Preferred Position BentoBox-0" = 104;
+        "NSStatusItem Preferred Position Display" = 236;
+        "NSStatusItem Preferred Position Sound" = 272;
         "NSStatusItem Preferred Position WiFi" = 220;
         "NSStatusItem VisibleCC Battery" = true;
         "NSStatusItem VisibleCC BentoBox-0" = true;

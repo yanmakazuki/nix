@@ -56,21 +56,3 @@ sudo ./result/sw/bin/darwin-rebuild switch \
 ```
 
 適用後はログアウト・ログインし直し、Terminalを開き直します。
-
-## 7. 起動確認
-
-```sh
-codex --version
-code --version
-node --version
-npm --version
-rustc --version
-cargo --version
-nvim
-```
-
-Neovimのプラグイン取得完了後、以下を実行します。
-
-```vim
-:LazyHealth
-```

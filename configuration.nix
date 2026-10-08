@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 {
   nixpkgs.hostPlatform = "aarch64-darwin";
   system.primaryUser = "yanmakazuki";
@@ -7,7 +7,16 @@
   nix.package = pkgs.nixVersions.latest;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  imports = [ ./macos.nix ./chrome.nix ./apps.nix ];
+  imports = [ ./macos.nix ./chrome.nix ];
+
+  nixpkgs.config.allowUnfreePredicate = pkg:
+    builtins.elem (lib.getName pkg) [ "google-chrome" "chatgpt" "vscode" ];
+
+  environment.systemPackages = [
+    pkgs.google-chrome
+    pkgs.chatgpt
+    pkgs.vscode
+  ];
 
   # Home Managerの対象ユーザーはmacOSで作成済みのアカウントを指定する。
   users.users.${config.system.primaryUser}.home = "/Users/${config.system.primaryUser}";
