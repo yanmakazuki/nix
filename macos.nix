@@ -10,6 +10,7 @@ in
 {
   fonts.packages = [ pkgs.nerd-fonts.hack ];
   environment.systemPackages = [ setupTerminalFont ];
+  security.pam.services.sudo_local.touchIdAuth = true;
 
   # Spotlight's menu bar visibility is a per-host user preference.
   home-manager.users.${config.system.primaryUser}.targets.darwin.currentHostDefaults
