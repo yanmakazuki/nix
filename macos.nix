@@ -24,6 +24,7 @@ in
     # VisibleCC flags alone do not configure these controls' menu bar mode.
     controlcenter = {
       Display = true;
+      NowPlaying = false;
       Sound = true;
     };
     dock = {
