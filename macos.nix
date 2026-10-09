@@ -123,6 +123,9 @@ in
       StageManagerHideWidgets = true;
     };
     CustomUserPreferences = {
+      "com.apple.dock" = {
+        enterMissionControlByTopWindowDrag = false;
+      };
       NSGlobalDomain = {
         AppleLanguages = [
           "en-JP"
