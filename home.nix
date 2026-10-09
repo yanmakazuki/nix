@@ -10,15 +10,9 @@
     pkgs.cargo
     pkgs.rust-analyzer
     pkgs.rustfmt
-    pkgs.clippy
     pkgs.git
     pkgs.docker
-    pkgs.ripgrep
-    pkgs.fd
-    pkgs.fzf
     pkgs.lazygit
-    pkgs.tree-sitter
-    pkgs.curl
   ];
 
   # ログイン時にDocker用のLinux VMを起動する。
