@@ -39,7 +39,7 @@ jobs:
         run: python -m unittest discover -s tests -v
 
   syntax-checks:
-    name: Nix and Lua syntax
+    name: Nix syntax
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -51,7 +51,7 @@ jobs:
       - name: Install syntax checkers
         run: |
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends nix-bin lua5.1
+          sudo apt-get install --yes --no-install-recommends nix-bin
 
       # 構文だけを検証する。nix-darwinのビルドや設定の適用は行わない。
       - name: Check Nix syntax
@@ -61,11 +61,3 @@ jobs:
             echo "Checking ${file}"
             nix-instantiate --parse "$file" > /dev/null
           done < <(git ls-files --cached -z -- '*.nix')
-
-      - name: Check Lua syntax
-        shell: bash
-        run: |
-          while IFS= read -r -d '' file; do
-            echo "Checking ${file}"
-            luac5.1 -p "$file"
-          done < <(git ls-files --cached -z -- '*.lua')

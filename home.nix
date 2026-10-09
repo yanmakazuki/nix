@@ -33,11 +33,8 @@
   };
 
   xdg.enable = true;
-  programs.neovim = {
+  programs.helix = {
     enable = true;
-    initLua = builtins.readFile ./nvim/init.lua;
+    defaultEditor = true;
   };
-
-  # ファイル単位で管理し、LazyVimが生成するlazy-lock.jsonの保存先は書き込み可能に保つ。
-  xdg.configFile."nvim/lua/config/lazy.lua".source = ./nvim/lua/config/lazy.lua;
 }
