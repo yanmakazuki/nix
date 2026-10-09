@@ -9,7 +9,6 @@
     pkgs.rustc
     pkgs.cargo
     pkgs.rust-analyzer
-    pkgs.rustfmt
     pkgs.git
     pkgs.docker
     pkgs.lazygit
