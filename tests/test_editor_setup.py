@@ -2,7 +2,10 @@
 import importlib.util
 from pathlib import Path
 import plistlib
+import subprocess
+import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -40,3 +43,40 @@ class EditorSetupTests(unittest.TestCase):
     def test_terminal_invalid_profiles_fail(self):
         with self.assertRaises(ValueError):
             terminal.update_preferences({'Window Settings': {'Basic': 'invalid'}}, b'font')
+
+
+class TerminalIOTests(unittest.TestCase):
+    def test_read_existing_preferences(self):
+        original = {'SecureKeyboardEntry': True}
+        result = subprocess.CompletedProcess([], 0, plistlib.dumps(original), b'')
+        with patch.object(terminal.subprocess, 'run', return_value=result):
+            self.assertEqual(terminal.read_preferences(), original)
+
+    def test_missing_domain_and_read_errors(self):
+        for message in (b'domain does not exist', b'domain not found'):
+            with self.subTest(message=message):
+                result = subprocess.CompletedProcess([], 1, b'', message)
+                with patch.object(terminal.subprocess, 'run', return_value=result):
+                    self.assertEqual(terminal.read_preferences(), {})
+        result = subprocess.CompletedProcess([], 1, b'', b'permission denied')
+        with patch.object(terminal.subprocess, 'run', return_value=result):
+            with self.assertRaises(RuntimeError):
+                terminal.read_preferences()
+
+    def test_backup_preserves_original_and_permissions(self):
+        original = {'Window Settings': {'Custom': {'Font': b'old'}}}
+        with tempfile.TemporaryDirectory(dir=ROOT) as directory:
+            with patch.object(terminal.Path, 'home', return_value=Path(directory)):
+                backup = terminal.backup_preferences(original)
+            self.assertEqual(plistlib.loads(backup.read_bytes()), original)
+            self.assertEqual(backup.stat().st_mode & 0o777, 0o600)
+
+    def test_setup_already_configured_skips_writes(self):
+        original = terminal.update_preferences({}, b'font')
+        with patch.object(terminal, 'font_archive', return_value=b'font'), \
+             patch.object(terminal, 'read_preferences', return_value=original), \
+             patch.object(terminal, 'backup_preferences') as backup, \
+             patch.object(terminal.subprocess, 'run') as run:
+            terminal.setup(Path('unused'))
+        backup.assert_not_called()
+        run.assert_not_called()

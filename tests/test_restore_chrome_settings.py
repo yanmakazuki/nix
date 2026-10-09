@@ -87,6 +87,37 @@ class RestoreTests(unittest.TestCase):
         self.assertEqual(self.path.read_bytes(), original)
         self.assertEqual(list(self.path.parent.glob('.Preferences.nix-*')), [])
 
+    def test_change_after_planning_is_preserved(self):
+        self.write_existing({'untouched': True})
+        plan = restore.build_plans(self.snapshot, self.base)[0]
+        changed = b'{"changed_elsewhere": true}'
+        self.path.write_bytes(changed)
+        with self.assertRaises(RuntimeError):
+            restore.apply_plan(plan)
+        self.assertEqual(self.path.read_bytes(), changed)
+        self.assertEqual(list(self.path.parent.glob('Preferences.before-nix-*')), [])
+
+    def test_change_before_replace_is_preserved(self):
+        self.write_existing({'untouched': True})
+        changed = b'{"changed_elsewhere": true}'
+
+        def change_preferences():
+            self.path.write_bytes(changed)
+            return False
+
+        calls = 0
+
+        def check_running():
+            nonlocal calls
+            calls += 1
+            return change_preferences() if calls == 3 else False
+
+        with patch.object(restore, 'chrome_is_running', side_effect=check_running):
+            with self.assertRaises(RuntimeError):
+                restore.restore(self.snapshot, self.base)
+        self.assertEqual(self.path.read_bytes(), changed)
+        self.assertEqual(list(self.path.parent.glob('.Preferences.nix-*')), [])
+
     def test_malformed_existing_file_is_preserved(self):
         self.path.parent.mkdir(parents=True)
         self.path.write_bytes(b'not json')

@@ -4,6 +4,7 @@ import base64
 import copy
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import plistlib
 import subprocess
@@ -57,28 +58,38 @@ def update_preferences(original, font):
     return prefs
 
 
-def setup(font_dir):
-    """ユーザーのTerminal設定を読み込み、バックアップ後に変更を適用する。"""
-    font = font_archive(font_dir)
+def read_preferences():
+    """macOSの設定管理から読み込み、未作成のドメインだけ空の辞書として扱う。"""
     result = subprocess.run(['/usr/bin/defaults', 'export', DOMAIN, '-'], capture_output=True)
     if result.returncode:
         # 設定が未作成の場合だけ空の構成から始める。他の読み取りエラーは無視しない。
         if b'does not exist' not in result.stderr and b'not found' not in result.stderr:
             raise RuntimeError(result.stderr.decode(errors='replace'))
-        original = {}
-    else:
-        original = plistlib.loads(result.stdout)
-    prefs = update_preferences(original, font)
-    if prefs == original:
-        print('Terminal font is already configured.')
-        return
-    # defaultsが管理する設定を上書きする前に、元のplistをユーザー専用で保存する。
+        return {}
+    return plistlib.loads(result.stdout)
+
+
+def backup_preferences(original):
+    """変更前のplistをユーザー専用の新規ファイルに保存する。"""
     backup_dir = Path.home() / 'Library/Application Support/nix-settings/terminal-backups'
     backup_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
     backup = backup_dir / f'{DOMAIN}-{stamp}.plist'
-    backup.write_bytes(plistlib.dumps(original))
-    backup.chmod(0o600)
+    fd = os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, 'wb') as stream:
+        stream.write(plistlib.dumps(original))
+    return backup
+
+
+def setup(font_dir):
+    """ユーザーのTerminal設定を読み込み、バックアップ後に変更を適用する。"""
+    font = font_archive(font_dir)
+    original = read_preferences()
+    prefs = update_preferences(original, font)
+    if prefs == original:
+        print('Terminal font is already configured.')
+        return
+    backup = backup_preferences(original)
     # plistファイルへの直接書き込みを避け、macOSの設定管理を通して反映する。
     subprocess.run(['/usr/bin/defaults', 'import', DOMAIN, '-'],
                    input=plistlib.dumps(prefs), check=True)

@@ -64,6 +64,49 @@ def reject_symlink(path):
         raise ValueError(f'シンボリックリンクの保存先には書き込みません: {path}')
 
 
+def read_preferences(path):
+    """未作成のPreferencesはNoneとして扱い、既存ファイルは元のバイト列を返す。"""
+    return path.read_bytes() if path.exists() else None
+
+
+def backup_preferences(path, content):
+    """元データを所有ユーザーだけが読み書きできる新規ファイルに保存する。"""
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
+    backup = path.with_name('Preferences.before-nix-' + stamp)
+    fd = os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, 'wb') as stream:
+        stream.write(content)
+    return backup
+
+
+def apply_plan(plan):
+    """復元計画を適用し、途中の変更やChromeの起動を検出したら中止する。"""
+    name, path = plan['name'], plan['path']
+    require_closed()
+    reject_symlink(path)
+    current = read_preferences(path)
+    if current != plan['original']:
+        raise RuntimeError(f'{name}: 読み取り後にPreferencesが変更されました。再実行してください。')
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if current is not None:
+        backup = backup_preferences(path, current)
+        print(f'{name}: バックアップ: {backup}')
+    # 同じディレクトリの一時ファイルを原子的に置き換え、不完全なJSONを残さない。
+    fd, temporary = tempfile.mkstemp(prefix='.Preferences.nix-', dir=path.parent)
+    try:
+        with os.fdopen(fd, 'wb') as stream:
+            stream.write(plan['content'])
+            stream.flush()
+            os.fsync(stream.fileno())
+        require_closed()
+        if read_preferences(path) != current:
+            raise RuntimeError(f'{name}: 書き込み直前にPreferencesが変更されました。')
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
 def build_plans(snapshot, base):
     """全プロファイルを検証し、ディスクに書き込まずに復元内容を組み立てる。"""
     profiles = snapshot.get('profiles')
@@ -78,7 +121,7 @@ def build_plans(snapshot, base):
             raise ValueError(f'{name}: preferencesは辞書で指定してください。')
         path = base / name / 'Preferences'
         reject_symlink(path)
-        original = path.read_bytes() if path.exists() else None
+        original = read_preferences(path)
         data = json.loads(original) if original is not None else {}
         if not isinstance(data, dict):
             raise ValueError(f'{name}: 既存のPreferencesが辞書ではありません。')
@@ -101,7 +144,7 @@ def restore(snapshot, base, dry_run=False):
     # 後続プロファイルの検証に失敗しても、先行プロファイルを変更せずに終了する。
     plans = build_plans(snapshot, base)
     for plan in plans:
-        name, path = plan['name'], plan['path']
+        name = plan['name']
         for key in plan['skipped']:
             print(f'{name}: 保護対象のため自動適用しません: {key}')
         if not plan['changed']:
@@ -110,37 +153,7 @@ def restore(snapshot, base, dry_run=False):
         if dry_run:
             print(f'{name}: {plan["count"]}項目を復元予定（書き込みなし）。')
             continue
-        require_closed()
-        reject_symlink(path)
-        # 読み取り後に別の処理が変更していた場合は、その変更を上書きしない。
-        current = path.read_bytes() if path.exists() else None
-        if current != plan['original']:
-            raise RuntimeError(f'{name}: 読み取り後にPreferencesが変更されました。再実行してください。')
-        path.parent.mkdir(parents=True, exist_ok=True)
-        # 元データをそのまま保存する。バックアップは所有ユーザーだけが読み書きできる。
-        if current is not None:
-            stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
-            backup = path.with_name('Preferences.before-nix-' + stamp)
-            fd = os.open(backup, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            with os.fdopen(fd, 'wb') as stream:
-                stream.write(current)
-            print(f'{name}: バックアップ: {backup}')
-        # 同じディレクトリに一時ファイルを作り、書き込み完了後に原子的に置き換える。
-        # 途中で失敗しても、既存のPreferencesを不完全なJSONにしない。
-        fd, temporary = tempfile.mkstemp(prefix='.Preferences.nix-', dir=path.parent)
-        try:
-            with os.fdopen(fd, 'wb') as stream:
-                stream.write(plan['content'])
-                stream.flush()
-                os.fsync(stream.fileno())
-            # 復元中にChromeが起動していないか、置き換え直前にも確認する。
-            require_closed()
-            if (path.read_bytes() if path.exists() else None) != current:
-                raise RuntimeError(f'{name}: 書き込み直前にPreferencesが変更されました。')
-            os.replace(temporary, path)
-        finally:
-            if os.path.exists(temporary):
-                os.unlink(temporary)
+        apply_plan(plan)
         print(f'{name}: {plan["count"]}項目を復元しました。Chromeを起動して確認してください。')
 
 
