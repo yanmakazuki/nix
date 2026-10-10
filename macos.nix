@@ -48,20 +48,6 @@ in
         KeyboardBacklightMuted = 0;
         KeyboardBacklightPrefVersion = 1;
         KeyboardBacklightUserOffset = 0;
-        # キーボードIDと学習済みの明るさ曲線は、このMacの値を保持する。
-        "95158272" = {
-          KeyboardBacklightAdjustedBrightnessCurve = {
-            KeyboardCurveX1 = 0;
-            KeyboardCurveX2 = 50;
-            KeyboardCurveX3 = 150;
-            KeyboardCurveX4 = 300;
-            KeyboardCurveY1 = 0.05;
-            KeyboardCurveY2 = 6.5;
-            KeyboardCurveY3 = 10.0;
-            KeyboardCurveY4 = 0.15;
-          };
-          KeyboardBacklightMaxUser = 15.0;
-        };
       };
     };
     # VisibleCCの表示フラグに加え、標準オプションでメニューバーの表示モードも設定する。
