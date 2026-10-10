@@ -12,21 +12,6 @@ in
   environment.systemPackages = [ setupTerminalFont ];
   security.pam.services.sudo_local.touchIdAuth = true;
 
-  # -currentHostで読み取った設定は、Home Managerからホスト単位で書き込む。
-  # 下のCustomUserPreferencesは通常のユーザー設定として書き込む。
-  home-manager.users.${config.system.primaryUser}.targets.darwin.currentHostDefaults = {
-    "com.apple.Spotlight".MenuItemHidden = true;
-    "com.apple.controlcenter" = {
-      # 8・2は現在のMacから読み取った内部値。表示フラグとは別に保持する。
-      FocusModes = 8;
-      NowPlaying = 8;
-      ScreenMirroring = 8;
-      Timer = 8;
-      Weather = 2;
-      WiFi = 8;
-    };
-  };
-
   system.activationScripts.postActivation.text = lib.mkAfter ''
     /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- ${setupTerminalFont}/bin/setup-terminal-font
   '';
@@ -133,9 +118,6 @@ in
       StageManagerHideWidgets = true;
     };
     CustomUserPreferences = {
-      "com.apple.dock" = {
-        enterMissionControlByTopWindowDrag = false;
-      };
       NSGlobalDomain = {
         AppleLanguages = [
           "en-JP"
@@ -147,12 +129,6 @@ in
       "com.apple.controlcenter" = {
         # 自動非表示の内部値を、現在のMacから読み取った状態で保持する。
         AutoHideMenuBarOption = 3;
-        # 現在の配置値を保持する。BentoBox-0はコントロールセンター。
-        "NSStatusItem Preferred Position Battery" = 194;
-        "NSStatusItem Preferred Position BentoBox-0" = 104;
-        "NSStatusItem Preferred Position Display" = 236;
-        "NSStatusItem Preferred Position Sound" = 272;
-        "NSStatusItem Preferred Position WiFi" = 220;
         # 各項目の表示フラグ。表示モードの設定と併せて管理する。
         "NSStatusItem VisibleCC Battery" = true;
         "NSStatusItem VisibleCC BentoBox-0" = true;
