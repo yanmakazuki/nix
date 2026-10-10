@@ -9,9 +9,11 @@
     pkgs.rustc
     pkgs.cargo
     pkgs.rust-analyzer
+    pkgs.pyright
     pkgs.git
     pkgs.docker
     pkgs.lazygit
+    pkgs.yazi
   ];
 
   # ログイン時にDocker用のLinux VMを起動する。
@@ -29,5 +31,6 @@
   programs.helix = {
     enable = true;
     defaultEditor = true;
+    settings.theme = "default";
   };
 }
