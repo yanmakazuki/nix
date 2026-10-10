@@ -45,6 +45,7 @@ in
     defaultEditor = true;
     settings = {
       theme = "tokyonight";
+      editor.line-number = "relative";
       keys.normal.space = {
         e = yaziPicker;
         E = yaziPicker;
