@@ -88,7 +88,6 @@ in
       persistent-apps = [
         { app = "/Applications/Nix Apps/Google Chrome.app"; }
         { app = "/System/Applications/Utilities/Terminal.app"; }
-        { app = "/Applications/Nix Apps/Visual Studio Code.app"; }
         { app = "/Applications/Nix Apps/ChatGPT.app"; }
         { app = "/System/Applications/Apps.app"; }
       ];

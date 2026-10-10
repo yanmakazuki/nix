@@ -7,6 +7,12 @@
   nix.package = pkgs.nixVersions.latest;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
+  # Yaziなど、シェルから起動するアプリの編集用コマンド。
+  environment.variables = {
+    EDITOR = "hx";
+    VISUAL = "hx";
+  };
+
   imports = [ ./macos.nix ./chrome.nix ];
 
   nixpkgs.config.allowUnfreePredicate = pkg:
