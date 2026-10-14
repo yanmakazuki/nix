@@ -1,6 +1,22 @@
 { lib, ... }:
 let
   menuBarItems = [ "Clock" "BentoBox-0" "Battery" ];
+  hiddenMenuBarItems = [
+    "AirDrop"
+    "Bluetooth"
+    "Display"
+    "FocusModes"
+    "NowPlaying"
+    "Sound"
+    "WiFi"
+    "ScreenMirroring"
+    "AccessibilityShortcuts"
+    "UserSwitcher"
+    "Spotlight"
+    "Siri"
+    "TimeMachine"
+    "VPN"
+  ];
 in
 {
   security.pam.services.sudo_local.touchIdAuth = true;
@@ -19,10 +35,10 @@ in
     controlcenter = {
       AirDrop = false;
       Bluetooth = false;
-      Display = true;
+      Display = false;
       FocusModes = false;
       NowPlaying = false;
-      Sound = true;
+      Sound = false;
     };
     menuExtraClock = {
       ShowAMPM = true;
@@ -86,7 +102,11 @@ in
       };
       "com.apple.controlcenter" = lib.genAttrs
         (map (name: "NSStatusItem VisibleCC ${name}") menuBarItems)
-        (_: true) // {
+        (_: true)
+        // lib.genAttrs
+          (map (name: "NSStatusItem VisibleCC ${name}") hiddenMenuBarItems)
+          (_: false)
+        // {
         AutoHideMenuBarOption = 3;
       };
       "com.apple.dock".enterMissionControlByTopWindowDrag = false;
