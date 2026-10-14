@@ -46,6 +46,10 @@ in
       ShowDayOfWeek = false;
     };
     dock = {
+      wvous-tl-corner = 1;
+      wvous-tr-corner = 1;
+      wvous-bl-corner = 1;
+      wvous-br-corner = 1;
       autohide = true;
       magnification = true;
       minimize-to-application = true;
