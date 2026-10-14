@@ -1,0 +1,4 @@
+flake.lock
+result
+result-*
+.DS_Store
