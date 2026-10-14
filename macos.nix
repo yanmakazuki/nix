@@ -1,6 +1,6 @@
 { lib, ... }:
 let
-  menuBarItems = [ "Clock" "BentoBox-0" "Battery" "Sound" ];
+  menuBarItems = [ "Clock" "BentoBox-0" "Battery" ];
 in
 {
   security.pam.services.sudo_local.touchIdAuth = true;
