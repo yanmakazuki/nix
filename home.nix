@@ -29,6 +29,7 @@ in
   xdg.configFile."ghostty/config".text = ''
     theme = TokyoNight Night
     background-opacity = 0.8
+    desktop-notifications = true
   '';
 
   programs.helix = {
