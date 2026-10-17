@@ -26,6 +26,10 @@ in
   ];
 
   xdg.enable = true;
+  xdg.configFile."ghostty/config".text = ''
+    theme = TokyoNight Night
+  '';
+
   programs.helix = {
     enable = true;
     defaultEditor = true;
