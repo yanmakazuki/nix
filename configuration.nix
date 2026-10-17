@@ -21,6 +21,7 @@ in
     builtins.elem (lib.getName pkg) [ "google-chrome" "chatgpt" "vscode" "spotify" ];
 
   environment.systemPackages = [
+    pkgs.ghostty-bin
     pkgs.google-chrome
     pkgs.chatgpt
     pkgs.vscode

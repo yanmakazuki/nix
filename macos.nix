@@ -59,7 +59,7 @@ in
       largesize = 100;
       persistent-apps = [
         { app = "/Applications/Nix Apps/Google Chrome.app"; }
-        { app = "/System/Applications/Utilities/Terminal.app"; }
+        { app = "/Applications/Nix Apps/Ghostty.app"; }
         { app = "/System/Applications/Apps.app"; }
       ];
       persistent-others = [ ];
