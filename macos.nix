@@ -1,5 +1,7 @@
 { lib, ... }:
 let
+  menuBarVisibility = visible: items:
+    lib.genAttrs (map (name: "NSStatusItem VisibleCC ${name}") items) (_: visible);
   menuBarItems = [ "Clock" "BentoBox-0" "Battery" ];
   hiddenMenuBarItems = [
     "AirDrop"
@@ -90,9 +92,7 @@ in
     };
     WindowManager = {
       AutoHide = true;
-      HideDesktop = true;
       StandardHideWidgets = true;
-      StageManagerHideWidgets = true;
     };
     CustomUserPreferences = {
       NSGlobalDomain = {
@@ -103,12 +103,8 @@ in
         AppleLocale = "en_JP";
         AppleMenuBarVisibleInFullscreen = true;
       };
-      "com.apple.controlcenter" = lib.genAttrs
-        (map (name: "NSStatusItem VisibleCC ${name}") menuBarItems)
-        (_: true)
-        // lib.genAttrs
-          (map (name: "NSStatusItem VisibleCC ${name}") hiddenMenuBarItems)
-          (_: false)
+      "com.apple.controlcenter" = menuBarVisibility true menuBarItems
+        // menuBarVisibility false hiddenMenuBarItems
         // {
         AutoHideMenuBarOption = 3;
       };
@@ -116,7 +112,7 @@ in
       "com.apple.TextInputMenu".visible = false;
       "com.apple.HIToolbox" = {
         AppleFnUsageType = 1;
-        AppleCapsLockPressAndHoldToggleOff = false;
+        AppleCapsLockPressAndHoldToggleOff = true;
       };
     };
   };

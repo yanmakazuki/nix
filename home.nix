@@ -1,8 +1,17 @@
 { pkgs, ... }:
 let
+  yaziChooserFile = "/tmp/helix-yazi-$PPID";
+  yaziPickerScript = pkgs.writeShellScript "helix-yazi-picker" ''
+    buffer_name=$1
+    chooser_file=$2
+
+    trap 'printf "\033[?1049h\033[?2004h" > /dev/tty' EXIT
+    : > "$chooser_file"
+    ${pkgs.yazi}/bin/yazi "$buffer_name" --chooser-file="$chooser_file"
+  '';
   yaziPicker = [
-    '':insert-output : > "/tmp/helix-yazi-$PPID"; ${pkgs.yazi}/bin/yazi "%{buffer_name}" --chooser-file="/tmp/helix-yazi-$PPID"; printf "\033[?1049h\033[?2004h" > /dev/tty''
-    '':vsplit "%sh{head -n 1 /tmp/helix-yazi-$PPID}"''
+    '':insert-output ${yaziPickerScript} "%{buffer_name}" "${yaziChooserFile}"''
+    '':vsplit "%sh{head -n 1 ${yaziChooserFile}}"''
     ":redraw"
     ":set mouse false"
     ":set mouse true"
