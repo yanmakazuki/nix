@@ -18,12 +18,11 @@ in
   };
 
   nixpkgs.config.allowUnfreePredicate = pkg:
-    builtins.elem (lib.getName pkg) [ "google-chrome" "chatgpt" "vscode" "spotify" ];
+    builtins.elem (lib.getName pkg) [ "google-chrome" "grok-build" "vscode" "spotify" ];
 
   environment.systemPackages = [
     pkgs.ghostty-bin
     pkgs.google-chrome
-    pkgs.chatgpt
     pkgs.vscode
     pkgs.spotify
   ];

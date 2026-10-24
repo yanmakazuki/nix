@@ -21,7 +21,7 @@ in
   home.stateVersion = "26.05";
 
   home.packages = [
-    pkgs.codex
+    pkgs.grok-build
     pkgs.nodejs
     pkgs.rustc
     pkgs.cargo
