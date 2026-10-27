@@ -18,12 +18,13 @@ in
   };
 
   nixpkgs.config.allowUnfreePredicate = pkg:
-    builtins.elem (lib.getName pkg) [ "google-chrome" "grok-build" "vscode" "spotify" ];
+    builtins.elem (lib.getName pkg) [ "google-chrome" "grok-build" "vscode" "cursor" "spotify" ];
 
   environment.systemPackages = [
     pkgs.ghostty-bin
     pkgs.google-chrome
     pkgs.vscode
+    pkgs.code-cursor
     pkgs.spotify
   ];
 
