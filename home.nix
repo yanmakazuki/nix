@@ -30,6 +30,7 @@ in
     pkgs.rust-analyzer
     pkgs.pyright
     pkgs.git
+    pkgs.gh
     pkgs.lazygit
     pkgs.yazi
   ];
