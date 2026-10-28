@@ -93,6 +93,8 @@ in
     WindowManager = {
       AutoHide = true;
       StandardHideWidgets = true;
+      StandardHideDesktopIcons = true;
+      HideDesktop = true;
     };
     CustomUserPreferences = {
       NSGlobalDomain = {
