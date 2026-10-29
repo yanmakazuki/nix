@@ -1,25 +1,4 @@
-{ lib, ... }:
-let
-  menuBarVisibility = visible: items:
-    lib.genAttrs (map (name: "NSStatusItem VisibleCC ${name}") items) (_: visible);
-  menuBarItems = [ "Clock" "BentoBox-0" "Battery" ];
-  hiddenMenuBarItems = [
-    "AirDrop"
-    "Bluetooth"
-    "Display"
-    "FocusModes"
-    "NowPlaying"
-    "Sound"
-    "WiFi"
-    "ScreenMirroring"
-    "AccessibilityShortcuts"
-    "UserSwitcher"
-    "Spotlight"
-    "Siri"
-    "TimeMachine"
-    "VPN"
-  ];
-in
+{ ... }:
 {
   security.pam.services.sudo_local.touchIdAuth = true;
 
@@ -33,14 +12,6 @@ in
         KeyboardBacklightPrefVersion = 1;
         KeyboardBacklightUserOffset = 0;
       };
-    };
-    controlcenter = {
-      AirDrop = false;
-      Bluetooth = false;
-      Display = false;
-      FocusModes = false;
-      NowPlaying = false;
-      Sound = false;
     };
     menuExtraClock = {
       ShowAMPM = true;
@@ -66,6 +37,7 @@ in
       ];
       persistent-others = [ ];
     };
+    spaces.spans-displays = false;
     finder = {
       NewWindowTarget = "Home";
     };
@@ -105,11 +77,7 @@ in
         AppleLocale = "en_JP";
         AppleMenuBarVisibleInFullscreen = true;
       };
-      "com.apple.controlcenter" = menuBarVisibility true menuBarItems
-        // menuBarVisibility false hiddenMenuBarItems
-        // {
-        AutoHideMenuBarOption = 3;
-      };
+      "com.apple.controlcenter".AutoHideMenuBarOption = 3;
       "com.apple.dock".enterMissionControlByTopWindowDrag = false;
       "com.apple.TextInputMenu".visible = false;
       "com.apple.HIToolbox" = {
