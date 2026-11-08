@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, openbot, pkgs, ... }:
 let
   primaryUser = config.system.primaryUser;
 in
@@ -29,6 +29,7 @@ in
 
   users.users.${primaryUser}.home = "/Users/${primaryUser}";
   home-manager = {
+    extraSpecialArgs = { inherit openbot; };
     useGlobalPkgs = true;
     useUserPackages = true;
     backupFileExtension = "before-home-manager";

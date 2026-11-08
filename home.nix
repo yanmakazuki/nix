@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ openbot, pkgs, ... }:
 let
   yaziChooserFile = "/tmp/helix-yazi-$PPID";
   yaziPickerScript = pkgs.writeShellScript "helix-yazi-picker" ''
@@ -31,6 +31,8 @@ in
     pkgs.git
     pkgs.gh
     pkgs.lazygit
+    pkgs.opencode
+    openbot.packages.${pkgs.stdenv.hostPlatform.system}.default
     pkgs.yazi
   ];
 
