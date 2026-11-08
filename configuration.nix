@@ -1,4 +1,4 @@
-{ config, lib, openbot, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 let
   primaryUser = config.system.primaryUser;
 in
@@ -6,9 +6,12 @@ in
   imports = [ ./macos.nix ];
 
   nixpkgs.hostPlatform = "aarch64-darwin";
-  system.primaryUser = "yanmakazuki";
+  nixpkgs.config.allowUnfreePredicate = pkg:
+    builtins.elem (lib.getName pkg) [ "google-chrome" "vscode" "spotify" "openbot" ];
 
+  system.primaryUser = "yanmakazuki";
   system.stateVersion = 7;
+
   nix.package = pkgs.nixVersions.latest;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
@@ -17,19 +20,15 @@ in
     VISUAL = "hx";
   };
 
-  nixpkgs.config.allowUnfreePredicate = pkg:
-    builtins.elem (lib.getName pkg) [ "google-chrome" "vscode" "spotify" ];
-
-  environment.systemPackages = [
-    pkgs.ghostty-bin
-    pkgs.google-chrome
-    pkgs.vscode
-    pkgs.spotify
+  environment.systemPackages = with pkgs; [
+    ghostty-bin
+    google-chrome
+    vscode
+    spotify
   ];
 
   users.users.${primaryUser}.home = "/Users/${primaryUser}";
   home-manager = {
-    extraSpecialArgs = { inherit openbot; };
     useGlobalPkgs = true;
     useUserPackages = true;
     backupFileExtension = "before-home-manager";

@@ -3,15 +3,13 @@
   security.pam.services.sudo_local.touchIdAuth = true;
 
   system.defaults = {
-    CustomSystemPreferences = {
-      "/var/root/Library/Preferences/com.apple.CoreBrightness".KeyboardBacklight = {
-        KeyboardBacklightABEnabled = 1;
-        KeyboardBacklightIdleDimTime = 60;
-        KeyboardBacklightManualBrightness = 0.003;
-        KeyboardBacklightMuted = 0;
-        KeyboardBacklightPrefVersion = 1;
-        KeyboardBacklightUserOffset = 0;
-      };
+    CustomSystemPreferences."/var/root/Library/Preferences/com.apple.CoreBrightness".KeyboardBacklight = {
+      KeyboardBacklightABEnabled = 1;
+      KeyboardBacklightIdleDimTime = 60;
+      KeyboardBacklightManualBrightness = 0.003;
+      KeyboardBacklightMuted = 0;
+      KeyboardBacklightPrefVersion = 1;
+      KeyboardBacklightUserOffset = 0;
     };
     menuExtraClock = {
       ShowAMPM = true;
@@ -31,16 +29,15 @@
       tilesize = 50;
       largesize = 100;
       persistent-apps = [
-        { app = "/Applications/Nix Apps/Google Chrome.app"; }
-        { app = "/Applications/Nix Apps/Ghostty.app"; }
-        { app = "/System/Applications/Apps.app"; }
+        "/Applications/Nix Apps/Google Chrome.app"
+        "/Applications/Nix Apps/Ghostty.app"
+        "/System/Applications/Apps.app"
       ];
       persistent-others = [ ];
     };
     spaces.spans-displays = false;
-    finder = {
-      NewWindowTarget = "Home";
-    };
+    finder.NewWindowTarget = "Home";
+    hitoolbox.AppleFnUsageType = "Change Input Source";
     NSGlobalDomain = {
       AppleEnableSwipeNavigateWithScrolls = true;
       NSAutomaticCapitalizationEnabled = false;
@@ -70,20 +67,14 @@
     };
     CustomUserPreferences = {
       NSGlobalDomain = {
-        AppleLanguages = [
-          "en-JP"
-          "ja-JP"
-        ];
+        AppleLanguages = [ "en-JP" "ja-JP" ];
         AppleLocale = "en_JP";
         AppleMenuBarVisibleInFullscreen = true;
       };
       "com.apple.controlcenter".AutoHideMenuBarOption = 3;
       "com.apple.dock".enterMissionControlByTopWindowDrag = false;
       "com.apple.TextInputMenu".visible = false;
-      "com.apple.HIToolbox" = {
-        AppleFnUsageType = 1;
-        AppleCapsLockPressAndHoldToggleOff = true;
-      };
+      "com.apple.HIToolbox".AppleCapsLockPressAndHoldToggleOff = true;
     };
   };
 }

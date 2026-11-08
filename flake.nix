@@ -13,8 +13,8 @@
 
   outputs = { nix-darwin, home-manager, openbot, ... }: {
     darwinConfigurations."Kazukis-MacBook-Air" = nix-darwin.lib.darwinSystem {
-      specialArgs = { inherit openbot; };
       modules = [
+        { nixpkgs.overlays = [ openbot.overlays.default ]; }
         ./configuration.nix
         home-manager.darwinModules.home-manager
       ];
