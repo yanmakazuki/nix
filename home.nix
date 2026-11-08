@@ -21,7 +21,6 @@ in
   home.stateVersion = "26.05";
 
   home.packages = [
-    pkgs.grok-build
     pkgs.nodejs
     pkgs.rustc
     pkgs.cargo
@@ -39,7 +38,6 @@ in
   xdg.configFile."ghostty/config".text = ''
     theme = TokyoNight Night
     background-opacity = 0.8
-    desktop-notifications = true
   '';
 
   programs.helix = {
