@@ -2,6 +2,28 @@
 {
   security.pam.services.sudo_local.touchIdAuth = true;
 
+  # AC接続中だけ蓋閉じスリープを無効化し、バッテリーに切り替わったら解除する
+  launchd.daemons.clamshell-awake = {
+    script = ''
+      pmset -g pslog | while read -r line; do
+        case "$line" in
+          *"'AC Power'"*)
+            pmset -a disablesleep 1
+            caffeinate -u -t 2
+            ;;
+          *"'Battery Power'"*)
+            pmset -a disablesleep 0
+            ioreg -r -k AppleClamshellState -d 4 | grep -q '"AppleClamshellState" = Yes' && pmset sleepnow
+            ;;
+        esac
+      done
+    '';
+    serviceConfig = {
+      RunAtLoad = true;
+      KeepAlive = true;
+    };
+  };
+
   system.defaults = {
     CustomSystemPreferences."/var/root/Library/Preferences/com.apple.CoreBrightness".KeyboardBacklight = {
       KeyboardBacklightABEnabled = 1;
