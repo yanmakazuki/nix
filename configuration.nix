@@ -12,7 +12,7 @@ in
   system.primaryUser = "yanmakazuki";
   system.stateVersion = 7;
 
-  nix.package = pkgs.nixVersions.latest;
+  nix.package = pkgs.lix;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   environment.variables = {

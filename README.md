@@ -1,6 +1,6 @@
 # 新しいMacのセットアップ
 
-Apple Silicon・macOS 26向け。
+Apple Silicon・macOS 27向け。
 
 ## 1. Command Line Tools
 

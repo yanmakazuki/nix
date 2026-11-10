@@ -25,14 +25,6 @@
   };
 
   system.defaults = {
-    CustomSystemPreferences."/var/root/Library/Preferences/com.apple.CoreBrightness".KeyboardBacklight = {
-      KeyboardBacklightABEnabled = 1;
-      KeyboardBacklightIdleDimTime = 60;
-      KeyboardBacklightManualBrightness = 0.003;
-      KeyboardBacklightMuted = 0;
-      KeyboardBacklightPrefVersion = 1;
-      KeyboardBacklightUserOffset = 0;
-    };
     menuExtraClock = {
       ShowAMPM = true;
       ShowDate = 1;
@@ -56,7 +48,6 @@
         "/Users/${config.system.primaryUser}/Applications/Home Manager Apps/OpenBot.app"
         "/System/Applications/Apps.app"
       ];
-      persistent-others = [ ];
     };
     spaces.spans-displays = false;
     finder.NewWindowTarget = "Home";
@@ -83,10 +74,8 @@
       TrackpadThreeFingerVertSwipeGesture = 2;
     };
     WindowManager = {
-      AutoHide = true;
       StandardHideWidgets = true;
       StandardHideDesktopIcons = true;
-      HideDesktop = true;
     };
     CustomUserPreferences = {
       NSGlobalDomain = {
