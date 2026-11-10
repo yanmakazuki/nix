@@ -96,7 +96,6 @@
       };
       "com.apple.controlcenter".AutoHideMenuBarOption = 3;
       "com.apple.dock".enterMissionControlByTopWindowDrag = false;
-      "com.apple.TextInputMenu".visible = false;
       "com.apple.HIToolbox".AppleCapsLockPressAndHoldToggleOff = true;
     };
   };
