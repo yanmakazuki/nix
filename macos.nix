@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 {
   security.pam.services.sudo_local.touchIdAuth = true;
 
@@ -53,6 +53,7 @@
       persistent-apps = [
         "/Applications/Nix Apps/Google Chrome.app"
         "/Applications/Nix Apps/Ghostty.app"
+        "/Users/${config.system.primaryUser}/Applications/Home Manager Apps/OpenBot.app"
         "/System/Applications/Apps.app"
       ];
       persistent-others = [ ];
