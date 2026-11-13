@@ -33,6 +33,9 @@ in
     yazi
   ];
 
+  # ローカルLLMサーバー(127.0.0.1:11434)。launchdエージェントとして常駐する
+  services.ollama.enable = true;
+
   xdg.configFile."ghostty/config".text = ''
     theme = TokyoNight Night
     background-opacity = 0.8
