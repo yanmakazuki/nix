@@ -45,7 +45,6 @@
       persistent-apps = [
         "/Applications/Nix Apps/Google Chrome.app"
         "/Applications/Nix Apps/Ghostty.app"
-        "/Applications/Nix Apps/OpenBot.app"
         "/System/Applications/Apps.app"
       ];
     };

@@ -7,7 +7,7 @@ in
 
   nixpkgs.hostPlatform = "aarch64-darwin";
   nixpkgs.config.allowUnfreePredicate = pkg:
-    builtins.elem (lib.getName pkg) [ "google-chrome" "openbot" ];
+    builtins.elem (lib.getName pkg) [ "google-chrome" ];
 
   system.primaryUser = "yanmakazuki";
   system.stateVersion = 7;
@@ -23,7 +23,6 @@ in
   environment.systemPackages = with pkgs; [
     ghostty-bin
     google-chrome
-    openbot
   ];
 
   users.users.${primaryUser}.home = "/Users/${primaryUser}";
