@@ -41,11 +41,24 @@ in
     enable = true;
     settings = {
       theme = "tokyonight";
-      editor.line-number = "relative";
-      keys.normal.space = {
-        e = yaziPicker;
-        E = yaziPicker;
+      editor = {
+        line-number = "relative";
+        clipboard-provider = "pasteboard";
       };
+      keys.normal = {
+        y = [
+          "yank"
+          "yank_to_clipboard"
+        ];
+        space = {
+          e = yaziPicker;
+          E = yaziPicker;
+        };
+      };
+      keys.select.y = [
+        "yank"
+        "yank_to_clipboard"
+      ];
     };
   };
 }
